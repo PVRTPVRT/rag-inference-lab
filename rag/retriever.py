@@ -1,4 +1,6 @@
 """ChromaDB retrieval with local BGE-M3 embeddings."""
+import os
+
 import chromadb
 from FlagEmbedding import BGEM3FlagModel
 
@@ -14,7 +16,12 @@ _col = None
 def _get_model() -> BGEM3FlagModel:
     global _model
     if _model is None:
-        _model = BGEM3FlagModel(EMBED_MODEL, use_fp16=True)
+        device = os.environ.get("RAG_EMBED_DEVICE", "cpu").strip() or "cpu"
+        _model = BGEM3FlagModel(
+            EMBED_MODEL,
+            devices=device,
+            use_fp16=device.startswith("cuda"),
+        )
     return _model
 
 
