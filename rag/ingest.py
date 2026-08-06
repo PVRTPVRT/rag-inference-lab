@@ -39,7 +39,11 @@ def extract_text(pdf_path: str) -> str:
         return "\n".join(page.get_text() for page in doc)
 
 
-def ingest(query: str = "LLM inference optimization", n: int = 3):
+def ingest(
+    query: str = "LLM inference optimization",
+    n: int = 3,
+    embed_device: str = "cuda:0",
+):
     print(f"[1/4] Downloading {n} papers for: '{query}'")
     paths = download_papers(query, n)
 
@@ -56,8 +60,12 @@ def ingest(query: str = "LLM inference optimization", n: int = 3):
             all_metas.append({"source": title, "chunk_idx": i})
     print(f"   Total chunks: {len(all_chunks)}")
 
-    print("[3/4] Generating embeddings with BGE-M3 (local)")
-    model = BGEM3FlagModel(EMBED_MODEL, use_fp16=True)
+    print(f"[3/4] Generating embeddings with BGE-M3 on {embed_device}")
+    model = BGEM3FlagModel(
+        EMBED_MODEL,
+        devices=embed_device,
+        use_fp16=embed_device.startswith("cuda"),
+    )
     embeddings = model.encode(
         all_chunks, batch_size=32, max_length=CHUNK_SIZE
     )["dense_vecs"].tolist()
@@ -84,5 +92,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--query", default="LLM inference optimization vLLM speculative decoding")
     parser.add_argument("--n", type=int, default=3)
+    parser.add_argument(
+        "--embed-device",
+        default="cuda:0",
+        help="Embedding device for ingestion, for example cuda:0 or cpu",
+    )
     args = parser.parse_args()
-    ingest(args.query, args.n)
+    ingest(args.query, args.n, args.embed_device)
