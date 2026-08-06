@@ -1,13 +1,15 @@
-"""
-Download arXiv papers, chunk them, and store embeddings in ChromaDB.
-Usage: python rag/ingest.py [--query "..."] [--n 5]
-"""
+"""Download arXiv papers, chunk them by tokenizer tokens, and ingest ChromaDB."""
+
 import argparse
 import os
-import fitz
+
 import arxiv
 import chromadb
-from FlagEmbedding import FlagModel
+import fitz
+from FlagEmbedding import BGEM3FlagModel
+from transformers import AutoTokenizer
+
+from rag.chunking import chunk_text
 
 CHROMA_PATH = "./chroma_db"
 COLLECTION_NAME = "papers"
@@ -32,32 +34,22 @@ def download_papers(query: str, n: int, save_dir: str = "./papers") -> list[str]
     return paths
 
 
-def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
-    words = text.split()
-    chunks, i = [], 0
-    while i < len(words):
-        chunk = " ".join(words[i : i + size])
-        if chunk.strip():
-            chunks.append(chunk)
-        i += size - overlap
-    return chunks
-
-
 def extract_text(pdf_path: str) -> str:
-    doc = fitz.open(pdf_path)
-    return "\n".join(page.get_text() for page in doc)
+    with fitz.open(pdf_path) as doc:
+        return "\n".join(page.get_text() for page in doc)
 
 
 def ingest(query: str = "LLM inference optimization", n: int = 3):
     print(f"[1/4] Downloading {n} papers for: '{query}'")
     paths = download_papers(query, n)
 
-    print("[2/4] Extracting and chunking text")
+    print("[2/4] Extracting and chunking text by BGE-M3 tokenizer tokens")
+    tokenizer = AutoTokenizer.from_pretrained(EMBED_MODEL)
     all_chunks, all_ids, all_metas = [], [], []
     for path in paths:
         title = os.path.splitext(os.path.basename(path))[0]
         text = extract_text(path)
-        chunks = chunk_text(text)
+        chunks = chunk_text(text, tokenizer, size=CHUNK_SIZE, overlap=CHUNK_OVERLAP)
         for i, chunk in enumerate(chunks):
             all_chunks.append(chunk)
             all_ids.append(f"{title}__chunk_{i}")
@@ -65,8 +57,10 @@ def ingest(query: str = "LLM inference optimization", n: int = 3):
     print(f"   Total chunks: {len(all_chunks)}")
 
     print("[3/4] Generating embeddings with BGE-M3 (local)")
-    model = FlagModel(EMBED_MODEL, use_fp16=True)
-    embeddings = model.encode(all_chunks, batch_size=32).tolist()
+    model = BGEM3FlagModel(EMBED_MODEL, use_fp16=True)
+    embeddings = model.encode(
+        all_chunks, batch_size=32, max_length=CHUNK_SIZE
+    )["dense_vecs"].tolist()
 
     print("[4/4] Storing in ChromaDB")
     client = chromadb.PersistentClient(path=CHROMA_PATH)
@@ -75,7 +69,6 @@ def ingest(query: str = "LLM inference optimization", n: int = 3):
     except Exception:
         pass
     col = client.create_collection(COLLECTION_NAME)
-    # ChromaDB has a 5461-item batch limit
     batch = 500
     for start in range(0, len(all_chunks), batch):
         col.add(

@@ -1,118 +1,128 @@
-"""
-RAG Inference Lab — Streamlit UI
-Run: streamlit run app.py
-"""
-import streamlit as st
+"""Streamlit UI for local RAG with measured inference metrics."""
+
+import os
+import sys
+
 import pandas as pd
-import sys, os
+import streamlit as st
 
 sys.path.insert(0, os.path.dirname(__file__))
-from rag.retriever import retrieve, build_context
-from backends.ollama_backend import generate as ollama_gen
-from backends.vllm_backend import generate as vllm_gen
+from backends.ollama_backend import generate as ollama_generate
+from backends.vllm_backend import generate as vllm_generate
+from rag.retriever import build_context, retrieve
 
 st.set_page_config(page_title="RAG Inference Lab", layout="wide")
 st.title("RAG Inference Lab")
-st.caption("Local RAG with live inference metrics — compare engines, quantization, and caching")
+st.caption("Local RAG with Ollama and vLLM; metrics are labeled by measurement source")
 
-# ── Sidebar config ────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.header("Engine Config")
+    st.header("Engine configuration")
     engine = st.selectbox("Inference engine", ["Ollama", "vLLM"])
-
     if engine == "Ollama":
         model = st.selectbox(
-            "Model (quantization)",
-            ["qwen2.5:7b-instruct-q4_K_M", "qwen2.5:7b-instruct-q8_0", "llama3.1:8b-instruct-q4_K_M"],
+            "Model",
+            [
+                "qwen2.5:7b-instruct-q4_K_M",
+                "qwen2.5:7b-instruct-q8_0",
+                "llama3.1:8b-instruct-q4_K_M",
+            ],
         )
-        prefix_caching = False
+        base_url = None
+        server_profile = "ollama"
     else:
         model = st.selectbox("Model", ["Qwen/Qwen2.5-7B-Instruct"])
-        prefix_caching = st.toggle("Prefix caching (must be enabled at server startup)", value=True)
-
+        base_url = st.text_input("OpenAI-compatible URL", "http://localhost:8000/v1")
+        server_profile = st.text_input(
+            "Server profile label",
+            "unspecified",
+            help="Caching and speculation are server-startup settings; this is a label, not a toggle.",
+        )
     top_k = st.slider("RAG top-k chunks", 1, 6, 3)
-    st.divider()
-    st.markdown("**Start servers:**")
-    st.code("ollama serve", language="bash")
-    st.code(
-        "vllm serve Qwen/Qwen2.5-7B-Instruct \\\n  --enable-prefix-caching --port 8000",
-        language="bash",
-    )
+    max_tokens = st.slider("Maximum output tokens", 32, 512, 128, step=32)
 
-# ── Session state ─────────────────────────────────────────────────────────────
 if "history" not in st.session_state:
-    st.session_state.history = []  # list of metrics dicts
+    st.session_state.history = []
 
-# ── Main layout ───────────────────────────────────────────────────────────────
 col_chat, col_metrics = st.columns([3, 2])
 
 with col_chat:
     st.subheader("Ask a question")
     query = st.text_input("Query", placeholder="What is speculative decoding and when does it help?")
-
     if st.button("Generate", type="primary") and query:
         with st.spinner("Retrieving context..."):
             chunks = retrieve(query, top_k=top_k)
             context = build_context(chunks)
-
         prompt = f"""Use the following retrieved context to answer the question.
-If the context doesn't contain the answer, say so clearly.
+If the context does not contain the answer, say so clearly.
 
 Context:
 {context}
 
 Question: {query}
 Answer:"""
-
-        st.markdown("**Retrieved chunks:**")
-        for i, c in enumerate(chunks):
-            with st.expander(f"[{i+1}] {c['source']} (score: {c['score']})"):
-                st.text(c["text"][:400] + "...")
-
-        answer_box = st.empty()
-        st.markdown("---")
-
+        st.markdown("**Retrieved chunks**")
+        for index, chunk in enumerate(chunks):
+            with st.expander(
+                f"[{index + 1}] {chunk['source']} (score: {chunk['score']})"
+            ):
+                st.text(chunk["text"][:400] + "...")
         with st.spinner(f"Generating with {engine} / {model}..."):
             try:
                 if engine == "Ollama":
-                    answer, metrics = ollama_gen(prompt, model=model)
+                    answer, metrics = ollama_generate(
+                        prompt, model=model, max_tokens=max_tokens
+                    )
                 else:
-                    answer, metrics = vllm_gen(prompt, model=model, prefix_caching=prefix_caching)
-            except Exception as e:
-                st.error(f"Backend error: {e}")
+                    answer, metrics = vllm_generate(
+                        prompt,
+                        model=model,
+                        base_url=base_url,
+                        server_profile=server_profile,
+                        max_tokens=max_tokens,
+                    )
+            except Exception as exc:
+                st.error(f"Backend error: {exc}")
                 st.stop()
-
-        answer_box.markdown(f"**Answer:**\n\n{answer}")
+        st.markdown(f"**Answer:**\n\n{answer}")
         st.session_state.history.append(metrics)
 
 with col_metrics:
-    st.subheader("Inference Metrics")
-
+    st.subheader("Inference metrics")
     if st.session_state.history:
         latest = st.session_state.history[-1]
-        m1, m2, m3 = st.columns(3)
-        m1.metric("TTFT", f"{latest['ttft_ms']} ms")
-        m2.metric("TPS", f"{latest['tps']} tok/s")
-        m3.metric("VRAM", f"{latest['vram_mb']} MB" if latest["vram_mb"] > 0 else "N/A")
-
-        st.caption(f"Engine: {latest['engine']} | Model: {latest['model']} | E2E: {latest['e2e_ms']} ms")
-
+        ttft = latest.get("ttft_ms")
+        tps = latest.get("decode_tps")
+        vram = latest.get("vram_used_mb")
+        metric_columns = st.columns(3)
+        metric_columns[0].metric("Client TTFT", f"{ttft} ms" if ttft is not None else "N/A")
+        metric_columns[1].metric("Decode TPS", f"{tps} tok/s" if tps is not None else "N/A")
+        metric_columns[2].metric("Device VRAM used", f"{vram} MB" if vram and vram > 0 else "N/A")
+        st.caption(
+            f"Engine: {latest['engine']} | Model: {latest['model']} | "
+            f"E2E: {latest['e2e_ms']} ms | Tokens: {latest.get('output_tokens')}"
+        )
+        st.caption(f"Token count source: {latest.get('token_count_source')}")
         if len(st.session_state.history) > 1:
-            st.divider()
-            st.markdown("**History (all runs)**")
-            df = pd.DataFrame(st.session_state.history)[
-                ["engine", "model", "ttft_ms", "tps", "vram_mb", "e2e_ms"]
+            frame = pd.DataFrame(st.session_state.history)
+            visible = [
+                column
+                for column in (
+                    "engine",
+                    "model",
+                    "ttft_ms",
+                    "decode_tps",
+                    "vram_used_mb",
+                    "e2e_ms",
+                )
+                if column in frame.columns
             ]
-            st.dataframe(df, use_container_width=True)
-
-            st.line_chart(df[["ttft_ms", "tps"]].rename(columns={"ttft_ms": "TTFT (ms)", "tps": "TPS"}))
+            st.dataframe(frame[visible], use_container_width=True)
     else:
-        st.info("Run a query to see metrics here.")
+        st.info("Run a query to see metrics.")
 
     st.divider()
-    st.markdown("**What these numbers mean:**")
     st.markdown(
-        "- **TTFT**: Time to first token — affected by prefill length and prefix cache hits\n"
-        "- **TPS**: Decode throughput — affected by model size, quantization, batch size\n"
-        "- **VRAM**: GPU memory used — Q4 ≈ 4GB, Q8 ≈ 8GB, FP16 ≈ 15GB for 7B"
+        "- **TTFT** is client-observed time to the first non-empty text chunk.\n"
+        "- **Decode TPS** uses Ollama `eval_count/eval_duration` or vLLM OpenAI usage tokens.\n"
+        "- **VRAM used** is total device usage, not isolated model weight size."
     )

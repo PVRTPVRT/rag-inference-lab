@@ -1,12 +1,20 @@
-"""
-CLI benchmark: run a fixed question set across engine configs and output a markdown table.
-Usage: python benchmark.py --engines ollama_q4 ollama_q8 vllm
-"""
+"""Reproducible CLI benchmark for the RAG inference backends."""
+
+from __future__ import annotations
+
 import argparse
+import importlib.metadata
+import json
+import platform
+import sys
 import time
-from rag.retriever import retrieve, build_context
-from backends.ollama_backend import generate as ollama_gen
-from backends.vllm_backend import generate as vllm_gen
+from datetime import datetime, timezone
+from pathlib import Path
+
+from backends.metrics import summarize
+from backends.ollama_backend import generate as ollama_generate
+from backends.vllm_backend import generate as vllm_generate
+from rag.retriever import build_context, retrieve
 
 QUESTIONS = [
     "What is speculative decoding and when does it improve throughput?",
@@ -17,70 +25,214 @@ QUESTIONS = [
 ]
 
 CONFIGS = {
-    "ollama_q4": {"engine": "ollama", "model": "qwen2.5:7b-instruct-q4_K_M"},
-    "ollama_q8": {"engine": "ollama", "model": "qwen2.5:7b-instruct-q8_0"},
-    "vllm_fp16": {"engine": "vllm", "model": "Qwen/Qwen2.5-7B-Instruct", "prefix_caching": False},
-    "vllm_prefix": {"engine": "vllm", "model": "Qwen/Qwen2.5-7B-Instruct", "prefix_caching": True},
+    "ollama_q4": {
+        "engine": "ollama",
+        "model": "qwen2.5:7b-instruct-q4_K_M",
+        "server_profile": "ollama_q4",
+    },
+    "ollama_q8": {
+        "engine": "ollama",
+        "model": "qwen2.5:7b-instruct-q8_0",
+        "server_profile": "ollama_q8",
+    },
+    "vllm_baseline": {
+        "engine": "vllm",
+        "model": "Qwen/Qwen2.5-7B-Instruct",
+        "base_url": "http://localhost:8000/v1",
+        "server_profile": "prefix_cache_off",
+    },
+    "vllm_prefix": {
+        "engine": "vllm",
+        "model": "Qwen/Qwen2.5-7B-Instruct",
+        "base_url": "http://localhost:8001/v1",
+        "server_profile": "prefix_cache_on",
+    },
+    "vllm_ngram": {
+        "engine": "vllm",
+        "model": "Qwen/Qwen2.5-7B-Instruct",
+        "base_url": "http://localhost:8002/v1",
+        "server_profile": "ngram_speculation_5",
+    },
 }
 
+SUMMARY_FIELDS = ("retrieval_ms", "ttft_ms", "e2e_ms", "decode_tps", "vram_used_mb")
 
-def run_config(cfg_name: str, cfg: dict, top_k: int = 3) -> list[dict]:
-    results = []
-    for q in QUESTIONS:
-        chunks = retrieve(q, top_k=top_k)
-        prompt = f"Context:\n{build_context(chunks)}\n\nQuestion: {q}\nAnswer:"
+
+def environment_snapshot() -> dict:
+    packages = {}
+    for name in ("chromadb", "FlagEmbedding", "openai", "requests", "vllm"):
         try:
-            if cfg["engine"] == "ollama":
-                _, m = ollama_gen(prompt, model=cfg["model"])
-            else:
-                _, m = vllm_gen(prompt, model=cfg["model"], prefix_caching=cfg.get("prefix_caching", True))
-            results.append(m)
-        except Exception as e:
-            print(f"  ERROR [{cfg_name}] {q[:40]}: {e}")
-    return results
+            packages[name] = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            packages[name] = None
+    gpu = None
+    try:
+        import pynvml
+
+        pynvml.nvmlInit()
+        handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+        gpu = pynvml.nvmlDeviceGetName(handle)
+        if isinstance(gpu, bytes):
+            gpu = gpu.decode("utf-8")
+    except Exception:
+        pass
+    return {
+        "python": platform.python_version(),
+        "platform": platform.platform(),
+        "gpu": gpu,
+        "packages": packages,
+    }
 
 
-def avg(vals: list[float]) -> str:
-    return f"{sum(vals)/len(vals):.1f}" if vals else "N/A"
+def build_prompt(question: str, chunks: list[dict]) -> str:
+    return (
+        "Use the retrieved context to answer the question. "
+        "If the context does not contain the answer, say so clearly.\n\n"
+        f"Context:\n{build_context(chunks)}\n\nQuestion: {question}\nAnswer:"
+    )
 
 
-def main():
+def generate_for_config(prompt: str, cfg: dict, max_tokens: int, seed: int):
+    common = {
+        "model": cfg["model"],
+        "max_tokens": max_tokens,
+        "temperature": 0.0,
+        "seed": seed,
+    }
+    if cfg["engine"] == "ollama":
+        return ollama_generate(prompt, **common)
+    return vllm_generate(
+        prompt,
+        base_url=cfg["base_url"],
+        server_profile=cfg["server_profile"],
+        **common,
+    )
+
+
+def execute_question(question: str, cfg: dict, top_k: int, max_tokens: int, seed: int) -> dict:
+    retrieval_start = time.perf_counter()
+    chunks = retrieve(question, top_k=top_k)
+    retrieval_ms = round((time.perf_counter() - retrieval_start) * 1000, 3)
+    _, metrics = generate_for_config(build_prompt(question, chunks), cfg, max_tokens, seed)
+    return {"retrieval_ms": retrieval_ms, **metrics}
+
+
+def summarize_trials(trials: list[dict]) -> dict:
+    successful = [trial for trial in trials if trial["status"] == "ok"]
+    return {
+        "successful_requests": len(successful),
+        "failed_requests": len(trials) - len(successful),
+        "metrics": {
+            field: summarize([trial.get(field) for trial in successful])
+            for field in SUMMARY_FIELDS
+        },
+    }
+
+
+def run_config(
+    name: str,
+    cfg: dict,
+    warmup: int,
+    repeats: int,
+    top_k: int,
+    max_tokens: int,
+    seed: int,
+) -> dict:
+    print(f"\nRunning {name}: warmup_rounds={warmup}, repeats={repeats}")
+    for warmup_round in range(warmup):
+        for question_index, question in enumerate(QUESTIONS):
+            try:
+                execute_question(question, cfg, top_k, max_tokens, seed)
+            except Exception as exc:
+                print(
+                    f"  warmup round={warmup_round + 1} question={question_index + 1} "
+                    f"failed: {type(exc).__name__}: {exc}"
+                )
+
+    trials = []
+    for repeat in range(repeats):
+        for question_index, question in enumerate(QUESTIONS):
+            trial = {"repeat": repeat, "question_id": question_index}
+            try:
+                trial.update(
+                    execute_question(question, cfg, top_k, max_tokens, seed + repeat)
+                )
+                trial["status"] = "ok"
+            except Exception as exc:
+                trial.update(
+                    {
+                        "status": "error",
+                        "error_type": type(exc).__name__,
+                        "error": str(exc)[:500],
+                    }
+                )
+            trials.append(trial)
+            print(f"  repeat={repeat + 1} question={question_index + 1}: {trial['status']}")
+    return {"name": name, "config": cfg, "summary": summarize_trials(trials), "trials": trials}
+
+
+def print_summary(results: list[dict]) -> None:
+    print("\n| Config | Success | TTFT p50 ms | E2E p50 ms | Decode TPS mean |")
+    print("|---|---:|---:|---:|---:|")
+    for result in results:
+        summary = result["summary"]
+        metrics = summary["metrics"]
+        print(
+            f"| {result['name']} | {summary['successful_requests']} | "
+            f"{metrics['ttft_ms']['p50']} | {metrics['e2e_ms']['p50']} | "
+            f"{metrics['decode_tps']['mean']} |"
+        )
+
+
+def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--engines", nargs="+", default=list(CONFIGS.keys()))
+    parser.add_argument("--engines", nargs="+", default=["ollama_q4"])
+    parser.add_argument("--warmup", type=int, default=3)
+    parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--top-k", type=int, default=3)
+    parser.add_argument("--max-tokens", type=int, default=128)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--output", type=Path, default=Path("outputs/benchmark.json"))
     args = parser.parse_args()
 
-    rows = []
-    for name in args.engines:
-        if name not in CONFIGS:
-            print(f"Unknown config: {name}. Available: {list(CONFIGS)}")
-            continue
-        cfg = CONFIGS[name]
-        print(f"\nRunning: {name} ...")
-        results = run_config(name, cfg)
-        if not results:
-            continue
-        rows.append({
-            "Config": name,
-            "Engine": cfg["engine"],
-            "Model": cfg["model"].split("/")[-1] if "/" in cfg["model"] else cfg["model"],
-            "Avg TTFT (ms)": avg([r["ttft_ms"] for r in results]),
-            "Avg TPS": avg([r["tps"] for r in results]),
-            "Avg E2E (ms)": avg([r["e2e_ms"] for r in results]),
-            "VRAM (MB)": avg([r["vram_mb"] for r in results if r["vram_mb"] > 0]),
-        })
+    unknown = sorted(set(args.engines) - set(CONFIGS))
+    if unknown:
+        parser.error(f"unknown engines: {unknown}; available: {sorted(CONFIGS)}")
+    if args.warmup < 0 or args.repeats < 1 or args.top_k < 1 or args.max_tokens < 1:
+        parser.error("warmup must be >= 0 and repeats/top-k/max-tokens must be >= 1")
 
-    # Print markdown table
-    print("\n\n## Benchmark Results\n")
-    if not rows:
-        print("No results.")
-        return
-
-    headers = list(rows[0].keys())
-    print("| " + " | ".join(headers) + " |")
-    print("|" + "|".join(["---"] * len(headers)) + "|")
-    for row in rows:
-        print("| " + " | ".join(str(row[h]) for h in headers) + " |")
-    print()
+    results = [
+        run_config(
+            name,
+            CONFIGS[name],
+            args.warmup,
+            args.repeats,
+            args.top_k,
+            args.max_tokens,
+            args.seed,
+        )
+        for name in args.engines
+    ]
+    payload = {
+        "schema_version": 1,
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "environment": environment_snapshot(),
+        "protocol": {
+            "questions": len(QUESTIONS),
+            "warmup_rounds": args.warmup,
+            "warmup_requests": args.warmup * len(QUESTIONS),
+            "repeats_per_question": args.repeats,
+            "top_k": args.top_k,
+            "max_output_tokens": args.max_tokens,
+            "temperature": 0.0,
+            "seed": args.seed,
+        },
+        "results": results,
+    }
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print_summary(results)
+    print(f"\nSaved raw trials and summaries to {args.output}")
 
 
 if __name__ == "__main__":

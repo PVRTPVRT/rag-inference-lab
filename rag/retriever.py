@@ -1,19 +1,20 @@
 """ChromaDB retrieval with local BGE-M3 embeddings."""
 import chromadb
-from FlagEmbedding import FlagModel
+from FlagEmbedding import BGEM3FlagModel
 
 CHROMA_PATH = "./chroma_db"
 COLLECTION_NAME = "papers"
 EMBED_MODEL = "BAAI/bge-m3"
+MAX_LENGTH = 512
 
-_model: FlagModel | None = None
+_model: BGEM3FlagModel | None = None
 _col = None
 
 
-def _get_model() -> FlagModel:
+def _get_model() -> BGEM3FlagModel:
     global _model
     if _model is None:
-        _model = FlagModel(EMBED_MODEL, use_fp16=True)
+        _model = BGEM3FlagModel(EMBED_MODEL, use_fp16=True)
     return _model
 
 
@@ -28,7 +29,9 @@ def _get_collection():
 def retrieve(query: str, top_k: int = 3) -> list[dict]:
     """Return top_k chunks as [{"source": str, "text": str, "score": float}]."""
     model = _get_model()
-    q_emb = model.encode([query])[0].tolist()
+    q_emb = model.encode(
+        [query], batch_size=1, max_length=MAX_LENGTH
+    )["dense_vecs"][0].tolist()
     col = _get_collection()
     results = col.query(query_embeddings=[q_emb], n_results=top_k, include=["documents", "metadatas", "distances"])
     chunks = []
