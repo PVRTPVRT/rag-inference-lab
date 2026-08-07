@@ -2,6 +2,7 @@
 
 import argparse
 import os
+from urllib.request import urlretrieve
 
 import arxiv
 import chromadb
@@ -38,7 +39,9 @@ def download_papers(
         safe = "".join(c for c in result.title if c.isalnum() or c in " -_").strip()
         path = os.path.join(save_dir, f"{safe}.pdf")
         if not os.path.exists(path):
-            result.download_pdf(dirpath=save_dir, filename=f"{safe}.pdf")
+            if not result.pdf_url:
+                raise ValueError(f"arXiv result has no PDF URL: {result.entry_id}")
+            urlretrieve(result.pdf_url, path)
             print(f"  Downloaded: {safe}")
         else:
             print(f"  Already exists: {safe}")
