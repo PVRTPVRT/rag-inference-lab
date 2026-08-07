@@ -1,4 +1,4 @@
-"""Download arXiv papers, chunk them by tokenizer tokens, and ingest ChromaDB."""
+"""Download fixed or searched arXiv papers and build a local ChromaDB index."""
 
 import argparse
 import os
@@ -18,11 +18,23 @@ CHUNK_OVERLAP = 50
 EMBED_MODEL = "BAAI/bge-m3"
 
 
-def download_papers(query: str, n: int, save_dir: str = "./papers") -> list[str]:
+def download_papers(
+    query: str,
+    n: int,
+    save_dir: str = "./papers",
+    arxiv_ids: list[str] | None = None,
+) -> list[str]:
     os.makedirs(save_dir, exist_ok=True)
-    search = arxiv.Search(query=query, max_results=n, sort_by=arxiv.SortCriterion.Relevance)
+    if arxiv_ids:
+        search = arxiv.Search(id_list=arxiv_ids)
+    else:
+        search = arxiv.Search(
+            query=query,
+            max_results=n,
+            sort_by=arxiv.SortCriterion.Relevance,
+        )
     paths = []
-    for result in search.results():
+    for result in arxiv.Client().results(search):
         safe = "".join(c for c in result.title if c.isalnum() or c in " -_").strip()
         path = os.path.join(save_dir, f"{safe}.pdf")
         if not os.path.exists(path):
@@ -43,9 +55,11 @@ def ingest(
     query: str = "LLM inference optimization",
     n: int = 3,
     embed_device: str = "cuda:0",
+    arxiv_ids: list[str] | None = None,
 ):
-    print(f"[1/4] Downloading {n} papers for: '{query}'")
-    paths = download_papers(query, n)
+    source = f"fixed arXiv IDs: {', '.join(arxiv_ids)}" if arxiv_ids else f"query: '{query}'"
+    print(f"[1/4] Downloading papers from {source}")
+    paths = download_papers(query, n, arxiv_ids=arxiv_ids)
 
     print("[2/4] Extracting and chunking text by BGE-M3 tokenizer tokens")
     tokenizer = AutoTokenizer.from_pretrained(EMBED_MODEL)
@@ -97,5 +111,10 @@ if __name__ == "__main__":
         default="cuda:0",
         help="Embedding device for ingestion, for example cuda:0 or cpu",
     )
+    parser.add_argument(
+        "--arxiv-ids",
+        nargs="+",
+        help="Fixed arXiv IDs for a reproducible corpus; overrides query-based discovery",
+    )
     args = parser.parse_args()
-    ingest(args.query, args.n, args.embed_device)
+    ingest(args.query, args.n, args.embed_device, args.arxiv_ids)
