@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 from datetime import datetime, timezone
 from pathlib import Path
 
 from backends.ollama_backend import generate
-from rag.prompting import INSUFFICIENT_EVIDENCE, build_rag_prompt, retrieval_confidence, should_abstain
+from rag.prompting import (
+    GROUNDING_INSTRUCTIONS, INSUFFICIENT_EVIDENCE, build_rag_prompt,
+    retrieval_confidence, should_abstain,
+)
+from rag.entailment import extract_citation_ids
 from rag.retriever import retrieve
-
-CITATION_RE = re.compile(r"\[S(\d+)\]")
 
 
 def term_group_recall(answer: str, groups: list[list[str]]) -> float | None:
@@ -24,7 +25,7 @@ def term_group_recall(answer: str, groups: list[list[str]]) -> float | None:
 
 
 def citation_diagnostic(answer: str, source_count: int) -> dict:
-    ids = [int(value) for value in CITATION_RE.findall(answer)]
+    ids = extract_citation_ids(answer)
     valid = [value for value in ids if 1 <= value <= source_count]
     return {
         "citation_ids": ids,
@@ -125,6 +126,7 @@ def main() -> None:
             "temperature": 0.0, "seed": 42, "dense_abstention_threshold": args.threshold,
             "rerank": args.rerank,
             "candidate_k": args.candidate_k if args.rerank else args.top_k,
+            "grounding_instructions": GROUNDING_INSTRUCTIONS,
         },
         "summary": summary,
         "trials": trials,

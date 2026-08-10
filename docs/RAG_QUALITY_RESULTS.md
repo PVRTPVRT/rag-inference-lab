@@ -43,6 +43,45 @@ format. The unconstrained reranker run had the best lexical fact coverage but
 missed citations on one of five positive answers. This is a multi-objective
 trade-off, not a universal quality win.
 
+## Claim-level citation entailment
+
+Citation syntax is now separated from semantic support. A local
+`cross-encoder/nli-deberta-v3-base` verifier classifies each generated claim
+against only its cited chunks as entailment, neutral, or contradiction. The
+verifier is evaluated on a balanced, manually labeled 30-pair in-domain set.
+
+| NLI input | Overall | Entailment | Neutral | Contradiction | Steady pair p50 |
+|---|---:|---:|---:|---:|---:|
+| Full 512-token chunk | 0.5667 | 0.1000 | 0.9000 | 0.7000 | 21.0 ms |
+| Top-3 evidence sentences | 0.8000 | 0.7000 | 0.9000 | 0.8000 | 13.6 ms |
+
+Evidence focusing ranks chunk sentences by lexical overlap with the claim, keeps
+the top three in document order, and then runs NLI. It improved the main failure
+mode without predicting entailment for any neutral or contradiction case in this
+small set. Six of 30 pairs remain wrong, including mathematical or compound
+claims, so the verifier is a diagnostic and not an automatic production block.
+
+The same focused verifier was run over saved generated answers. Claim coverage is
+sentence-level: a citation at the end of a paragraph does not silently support all
+preceding sentences.
+
+| Saved answer run | Claims | Citation coverage | NLI entailment | Contradiction |
+|---|---:|---:|---:|---:|
+| Dense historical baseline | 32 | 0.2812 | 0.2188 | 0.0000 |
+| Strict citation experiment | 10 | 0.9000 | 0.5000 | 0.0000 |
+| Balanced final, recorded protocol | 16 | 0.5625 | 0.3125 | 0.0000 |
+
+The strict prompt is more auditable but its fact-group recall was only 0.5000,
+versus 0.6667 for the balanced final run. A further sentence-citation prompt was
+also rejected: it raised lexical fact recall to 0.7333 but claim citation coverage
+was only 0.5625, NLI entailment was 0.1875, and one contradiction was flagged. Prompt-only
+instructions therefore did not solve grounding reliably.
+
+The final answer JSON records the full static grounding instructions in its
+protocol. Older prompt-variant files did not, so they remain exploratory evidence
+rather than fully reproducible prompt benchmarks. The NLI model threshold is not
+calibrated on independently annotated generated claims.
+
 ## Abstention boundary
 
 The UI exposes the 0.5672 dense-score gate as **experimental and off by default**.
@@ -77,11 +116,29 @@ RAG_EMBED_DEVICE=cpu RAG_RERANK_DEVICE=cuda:0 python evaluate_answers.py \
   --output results/quality/ollama_q4_rerank_balanced_prompt_n8.json
 ```
 
+Run the NLI diagnostic and the protocol-recorded final answer evaluation:
+
+```bash
+RAG_NLI_DEVICE=cuda:0 python evaluate_entailment.py --focus-sentences 3 \
+  --output results/quality/nli_entailment_focused_gold_n30.json
+
+RAG_EMBED_DEVICE=cpu RAG_RERANK_DEVICE=cuda:0 python evaluate_answers.py \
+  --rerank --candidate-k 12 --max-tokens 256 \
+  --output results/quality/ollama_q4_grounding_protocol_n8.json
+
+RAG_NLI_DEVICE=cuda:0 python evaluate_answer_grounding.py \
+  --answers results/quality/ollama_q4_grounding_protocol_n8.json \
+  --output results/quality/nli_grounding_protocol_n5.json
+```
+
 ## Remaining limitations
 
 - The corpus has only three related systems papers and the test sets are small.
 - Evidence labels were manually derived from the indexed PDFs but were not
   independently double-annotated.
 - Term-group recall can miss valid paraphrases and does not measure entailment.
+- The 30-pair NLI set has one annotator and generated claims lack independent labels.
+- Evidence focusing is lexical and can miss mathematical or low-overlap support.
+- Claim-level thresholds are uncalibrated, so NLI is not an online blocking guardrail.
 - Citation-ID validity does not prove that a cited chunk supports each claim.
 - The abstention threshold needs a larger held-out positive/negative set.

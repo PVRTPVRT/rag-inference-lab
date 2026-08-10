@@ -1,0 +1,496 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-10T12:41:35.125325+00:00",
+  "environment": {
+    "python": "3.10.12",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "model": "cross-encoder/nli-deberta-v3-base",
+    "device": "cuda:0"
+  },
+  "protocol": {
+    "source_answers": "results/quality/ollama_q4_answers_n8.json",
+    "entailment_threshold": 0.5,
+    "contradiction_threshold": 0.5,
+    "focus_sentences": 3
+  },
+  "summary": {
+    "answers": 5,
+    "claims": 32,
+    "cited_claims": 9,
+    "citation_coverage": 0.2812,
+    "supported_claims": 7,
+    "claim_entailment_rate": 0.2188,
+    "contradicted_claims": 0,
+    "claim_contradiction_rate": 0.0,
+    "invalid_citation_count": 0,
+    "nli_pairs": 9,
+    "nli_pair_mean_ms": 73.601,
+    "nli_pair_p50_ms": 13.211,
+    "warning": "NLI labels are automated diagnostics. The thresholds require calibration against independently annotated generated-answer claims."
+  },
+  "trials": [
+    {
+      "case_id": "answer-spec-correctness",
+      "answer": "Speculative decoding preserves the target model's output distribution by accepting all guesses generated from the more efficient approximation model that can lead to an identical distribution when evaluated by the target model. Specifically, after using a more efficient model \\(M_q\\) to generate \\(\\gamma\\) completions, the target model \\(M_p\\) evaluates these completions in parallel. Only those completions that result in distributions accepted by the target model are kept, ensuring that the final output distribution matches that of the target model alone [S1].",
+      "verification": {
+        "claims": [
+          {
+            "claim": "Speculative decoding preserves the target model's output distribution by accepting all guesses generated from the more efficient approximation model that can lead to an identical distribution when evaluated by the target model.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "Specifically, after using a more efficient model \\(M_q\\) to generate \\(\\gamma\\) completions, the target model \\(M_p\\) evaluates these completions in parallel.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "Only those completions that result in distributions accepted by the target model are kept, ensuring that the final output distribution matches that of the target model alone.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "neutral",
+                "probabilities": {
+                  "contradiction": 0.000107,
+                  "entailment": 0.153984,
+                  "neutral": 0.84591
+                },
+                "latency_ms": 403.205
+              }
+            ]
+          }
+        ],
+        "summary": {
+          "claim_count": 3,
+          "cited_claim_count": 1,
+          "citation_coverage": 0.3333,
+          "supported_claim_count": 0,
+          "entailment_rate": 0.0,
+          "contradicted_claim_count": 0,
+          "contradiction_rate": 0.0,
+          "invalid_citation_count": 0
+        }
+      }
+    },
+    {
+      "case_id": "answer-spec-speed",
+      "answer": "The speedup from speculative decoding is determined by several factors. According to the retrieved context:\n\n1. Availability of Additional Computation Resources: The method provides significant benefits when there are additional computation resources available, particularly when memory bandwidth is the bottleneck [S1].\n\n2. Model Size and Task Complexity: The approach has been tested across various model sizes and tasks, including unconditional generation from a 97M parameter GPT-like model, English to German translation with an 11B parameters T5-XXL model, and dialog tasks with a 137B parameter LaMDA model [S3].\n\n3. Compatibility with Model Architectures: The method does not require changes to the model architectures or training regimes, ensuring that output distributions remain unchanged [S1].\n\n4. Choice of Approximation Model (Mq): The efficiency of speculative decoding depends on selecting an appropriate approximation model Mq that can generate \u03b3 completions efficiently [S3].\n\n5",
+      "verification": {
+        "claims": [
+          {
+            "claim": "The speedup from speculative decoding is determined by several factors.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "According to the retrieved context:",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "Availability of Additional Computation Resources: The method provides significant benefits when there are additional computation resources available, particularly when memory bandwidth is the bottleneck.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 3.9e-05,
+                  "entailment": 0.997904,
+                  "neutral": 0.002057
+                },
+                "latency_ms": 47.494
+              }
+            ]
+          },
+          {
+            "claim": "Model Size and Task Complexity: The approach has been tested across various model sizes and tasks, including unconditional generation from a 97M parameter GPT-like model, English to German translation with an 11B parameters T5-XXL model, and dialog tasks with a 137B parameter LaMDA model.",
+            "citation_ids": [
+              3
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S3",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 7.6e-05,
+                  "entailment": 0.99787,
+                  "neutral": 0.002054
+                },
+                "latency_ms": 37.129
+              }
+            ]
+          },
+          {
+            "claim": "Compatibility with Model Architectures: The method does not require changes to the model architectures or training regimes, ensuring that output distributions remain unchanged.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 7.6e-05,
+                  "entailment": 0.994856,
+                  "neutral": 0.005068
+                },
+                "latency_ms": 110.6
+              }
+            ]
+          },
+          {
+            "claim": "Choice of Approximation Model (Mq): The efficiency of speculative decoding depends on selecting an appropriate approximation model Mq that can generate \u03b3 completions efficiently.",
+            "citation_ids": [
+              3
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S3",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 0.000459,
+                  "entailment": 0.563523,
+                  "neutral": 0.436018
+                },
+                "latency_ms": 13.211
+              }
+            ]
+          },
+          {
+            "claim": "5",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          }
+        ],
+        "summary": {
+          "claim_count": 7,
+          "cited_claim_count": 4,
+          "citation_coverage": 0.5714,
+          "supported_claim_count": 4,
+          "entailment_rate": 0.5714,
+          "contradicted_claim_count": 0,
+          "contradiction_rate": 0.0,
+          "invalid_citation_count": 0
+        }
+      }
+    },
+    {
+      "case_id": "answer-paged-mapping",
+      "answer": "PagedAttention organizes the KV cache as fixed-size KV blocks, similar to how pages are managed in virtual memory [S1]. A request\u2019s KV cache is represented as a series of logical KV blocks. The last KV block's unfilled positions are reserved for future generations. On GPU workers, a block engine allocates a contiguous chunk of GPU DRAM and divides it into physical KV blocks [S1]. The KV block manager maintains block tables\u2014the mapping between logical and physical KV blocks of each request. Each entry in the block table records the corresponding physical blocks of a logical block and the number of filled positions within those blocks [S3].",
+      "verification": {
+        "claims": [
+          {
+            "claim": "PagedAttention organizes the KV cache as fixed-size KV blocks, similar to how pages are managed in virtual memory.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 8.2e-05,
+                  "entailment": 0.997777,
+                  "neutral": 0.002141
+                },
+                "latency_ms": 13.152
+              }
+            ]
+          },
+          {
+            "claim": "A request\u2019s KV cache is represented as a series of logical KV blocks.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "The last KV block's unfilled positions are reserved for future generations.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "On GPU workers, a block engine allocates a contiguous chunk of GPU DRAM and divides it into physical KV blocks.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 0.000137,
+                  "entailment": 0.99769,
+                  "neutral": 0.002173
+                },
+                "latency_ms": 13.049
+              }
+            ]
+          },
+          {
+            "claim": "The KV block manager maintains block tables\u2014the mapping between logical and physical KV blocks of each request.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "Each entry in the block table records the corresponding physical blocks of a logical block and the number of filled positions within those blocks.",
+            "citation_ids": [
+              3
+            ],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S3",
+                "predicted_label": "neutral",
+                "probabilities": {
+                  "contradiction": 0.000254,
+                  "entailment": 0.000436,
+                  "neutral": 0.99931
+                },
+                "latency_ms": 12.391
+              }
+            ]
+          }
+        ],
+        "summary": {
+          "claim_count": 6,
+          "cited_claim_count": 3,
+          "citation_coverage": 0.5,
+          "supported_claim_count": 2,
+          "entailment_rate": 0.3333,
+          "contradicted_claim_count": 0,
+          "contradiction_rate": 0.0,
+          "invalid_citation_count": 0
+        }
+      }
+    },
+    {
+      "case_id": "answer-paged-sharing",
+      "answer": "During parallel sampling, vLLM shares the KV cache of the prompt among multiple samples that have the same input prompt. Specifically, vLLM uses a reference count mechanism to manage physical blocks shared across multiple sequences. For instance, in Fig. 8, both sequences share the same prompt's state during the prompt phase by mapping logical blocks 0 and 1 of both sequences to the same physical blocks (7 and 1 respectively). The reference counts for these physical blocks are increased when they are shared by multiple sequences. When a sequence needs to write to its last logical block, vLLM allocates a new physical block if necessary, copies the information from the original block, and decreases the reference count. This way, memory usage is reduced, especially for long input prompts [S1].",
+      "verification": {
+        "claims": [
+          {
+            "claim": "During parallel sampling, vLLM shares the KV cache of the prompt among multiple samples that have the same input prompt.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "Specifically, vLLM uses a reference count mechanism to manage physical blocks shared across multiple sequences.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "For instance, in Fig.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "8, both sequences share the same prompt's state during the prompt phase by mapping logical blocks 0 and 1 of both sequences to the same physical blocks (7 and 1 respectively).",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "The reference counts for these physical blocks are increased when they are shared by multiple sequences.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "When a sequence needs to write to its last logical block, vLLM allocates a new physical block if necessary, copies the information from the original block, and decreases the reference count.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "This way, memory usage is reduced, especially for long input prompts.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 3.7e-05,
+                  "entailment": 0.839252,
+                  "neutral": 0.160711
+                },
+                "latency_ms": 12.182
+              }
+            ]
+          }
+        ],
+        "summary": {
+          "claim_count": 7,
+          "cited_claim_count": 1,
+          "citation_coverage": 0.1429,
+          "supported_claim_count": 1,
+          "entailment_rate": 0.1429,
+          "contradicted_claim_count": 0,
+          "contradiction_rate": 0.0,
+          "invalid_citation_count": 0
+        }
+      }
+    },
+    {
+      "case_id": "answer-sglang-radix",
+      "answer": "RadixAttention reuses and manages the KV (key-value) cache through a radix tree structure. Unlike traditional systems that discard the KV cache after each generation request, this system retains the cache for prompts and generation results within the radix tree. This allows for efficient prefix search, reuse, insertion, and eviction.\n\nFor eviction, an LRU (Least Recently Used) policy is implemented to manage memory efficiently. Specifically, leaves of the radix tree are evicted first because they have not been used recently. By doing so, common ancestors can be reused until they too become leaves and are subsequently evicted. This approach ensures that frequently accessed parts of the cache remain available while minimizing overall memory usage.\n\nThe system also includes a cache-aware scheduling policy to further enhance cache hit rates. This involves dynamically allocating memory for both caching and running requests from the same memory pool, allowing for more flexible management of resources during runtime operations.",
+      "verification": {
+        "claims": [
+          {
+            "claim": "RadixAttention reuses and manages the KV (key-value) cache through a radix tree structure.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "Unlike traditional systems that discard the KV cache after each generation request, this system retains the cache for prompts and generation results within the radix tree.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "This allows for efficient prefix search, reuse, insertion, and eviction.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "For eviction, an LRU (Least Recently Used) policy is implemented to manage memory efficiently.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "Specifically, leaves of the radix tree are evicted first because they have not been used recently.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "By doing so, common ancestors can be reused until they too become leaves and are subsequently evicted.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "This approach ensures that frequently accessed parts of the cache remain available while minimizing overall memory usage.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "The system also includes a cache-aware scheduling policy to further enhance cache hit rates.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "This involves dynamically allocating memory for both caching and running requests from the same memory pool, allowing for more flexible management of resources during runtime operations.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          }
+        ],
+        "summary": {
+          "claim_count": 9,
+          "cited_claim_count": 0,
+          "citation_coverage": 0.0,
+          "supported_claim_count": 0,
+          "entailment_rate": 0.0,
+          "contradicted_claim_count": 0,
+          "contradiction_rate": 0.0,
+          "invalid_citation_count": 0
+        }
+      }
+    }
+  ]
+}

@@ -19,6 +19,8 @@ separate from measured results, and no speedup is claimed without a saved run.
   citation-constrained prompting, and an explicitly experimental abstention gate.
 - Source, evidence-chunk, answer-fact, citation, and abstention diagnostics retain
   raw JSON outputs and negative results.
+- Claim-to-citation NLI has a balanced 30-pair diagnostic, evidence focusing,
+  confusion matrices, and generated-answer checks; it is not an online blocker.
 - Verified RTX 4090 trials and retrieval-quality diagnostics are summarized in
   [`docs/RTX4090_RESULTS.md`](docs/RTX4090_RESULTS.md).
 - Quality A/B results: [`docs/RAG_QUALITY_RESULTS.md`](docs/RAG_QUALITY_RESULTS.md).
@@ -35,6 +37,8 @@ explicit `N/A` over a misleading throughput value.
 - Retrieve top-k chunks and build source-labeled context.
 - Optionally rerank dense candidates with BGE-reranker-v2-m3.
 - Require stable `[S1]` citations and gate low-confidence queries before generation.
+- Diagnose whether cited evidence entails each claim with a local three-way NLI
+  model and a measured top-sentence evidence-focusing stage.
 - Serve a Streamlit UI across Ollama GGUF and vLLM FP16 backends.
 - Measure client TTFT, end-to-end latency, decode throughput, and device-wide
   VRAM usage with clearly labeled measurement sources.
@@ -49,6 +53,8 @@ evaluate_retrieval.py        Labeled source-level Hit@k and MRR evaluation
 evaluate_abstention.py       Out-of-corpus score-overlap diagnostic
 evaluate_evidence.py         Manually labeled evidence-chunk evaluation
 evaluate_answers.py          Answer facts, citations, and abstention diagnostic
+evaluate_entailment.py       Balanced three-way cited-chunk NLI evaluation
+evaluate_answer_grounding.py NLI diagnostic over saved generated answers
 backends/metrics.py          Dependency-free metric aggregation
 backends/ollama_backend.py   Ollama streaming client and server metrics
 backends/preflight.py        Server/model/version and VRAM-isolation checks
@@ -59,6 +65,7 @@ rag/ingest.py                PDF ingestion and ChromaDB indexing
 rag/retriever.py             BGE-M3 retrieval and context construction
 rag/reranker.py              Optional BGE cross-encoder reranking
 rag/prompting.py             Citation contract and experimental gate
+rag/entailment.py            Claim extraction, evidence focusing, and local NLI
 docs/BENCHMARK_PROTOCOL.md   Claim and reproduction rules
 docs/RTX4090_RESULTS.md      Verified results and claim boundaries
 results/                     Published raw serving and retrieval trials
@@ -188,6 +195,7 @@ This repository does not currently claim that:
 - a particular chunk length triggers or avoids an SDPA fallback;
 - five fixed questions measure retrieval or answer quality;
 - cross-encoder reranking is universally better than dense retrieval;
+- the small one-annotator NLI diagnostic is production-calibrated groundedness;
 - citation IDs establish claim-level entailment or the fitted gate generalizes.
 
 Those are hypotheses to test under controlled conditions. See

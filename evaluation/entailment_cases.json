@@ -1,0 +1,212 @@
+[
+  {
+    "id": "entail-paged-01",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 15,
+    "claim": "A vLLM block table maps logical KV blocks to physical KV blocks.",
+    "label": "entailment"
+  },
+  {
+    "id": "entail-paged-02",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 15,
+    "claim": "A block-table entry records the physical block and the number of filled positions.",
+    "label": "entailment"
+  },
+  {
+    "id": "entail-paged-03",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 14,
+    "claim": "PagedAttention permits logical KV blocks to map to non-contiguous physical memory.",
+    "label": "entailment"
+  },
+  {
+    "id": "entail-paged-04",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 19,
+    "claim": "Copy-on-write lets multiple samples share physical KV blocks until a write requires a copy.",
+    "label": "entailment"
+  },
+  {
+    "id": "entail-sglang-01",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 9,
+    "claim": "RadixAttention retains KV cache entries in a radix tree for prefix reuse.",
+    "label": "entailment"
+  },
+  {
+    "id": "entail-sglang-02",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 10,
+    "claim": "Cached tokens and active requests share one dynamically managed memory pool.",
+    "label": "entailment"
+  },
+  {
+    "id": "entail-sglang-03",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 14,
+    "claim": "SGLang can constrain generated output with regular expressions.",
+    "label": "entailment"
+  },
+  {
+    "id": "entail-sglang-04",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 3,
+    "claim": "The SGLang language is embedded in Python and includes fork and join primitives.",
+    "label": "entailment"
+  },
+  {
+    "id": "entail-spec-01",
+    "source": "Fast Inference from Transformers via Speculative Decoding",
+    "chunk_idx": 6,
+    "claim": "The acceptance rate is the probability that a token proposed by the draft distribution is accepted.",
+    "label": "entailment"
+  },
+  {
+    "id": "entail-spec-02",
+    "source": "Fast Inference from Transformers via Speculative Decoding",
+    "chunk_idx": 27,
+    "claim": "Speculative sampling produces the same token distribution as sampling from the target model alone.",
+    "label": "entailment"
+  },
+  {
+    "id": "neutral-paged-01",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 15,
+    "claim": "Every physical KV block contains exactly sixteen tokens.",
+    "label": "neutral"
+  },
+  {
+    "id": "neutral-paged-02",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 14,
+    "claim": "The mapping is persisted to an external relational database after each decoding step.",
+    "label": "neutral"
+  },
+  {
+    "id": "neutral-paged-03",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 19,
+    "claim": "The copy-on-write path is implemented with CUDA graph capture.",
+    "label": "neutral"
+  },
+  {
+    "id": "neutral-paged-04",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 19,
+    "claim": "The shared blocks are encrypted with a separate key for every sample.",
+    "label": "neutral"
+  },
+  {
+    "id": "neutral-sglang-01",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 9,
+    "claim": "RadixAttention replicates every cached prefix across three GPU hosts.",
+    "label": "neutral"
+  },
+  {
+    "id": "neutral-sglang-02",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 10,
+    "claim": "The memory pool permanently reserves exactly ten percent for cached tokens.",
+    "label": "neutral"
+  },
+  {
+    "id": "neutral-sglang-03",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 14,
+    "claim": "The regex constraint engine is implemented with the PCRE2 library.",
+    "label": "neutral"
+  },
+  {
+    "id": "neutral-sglang-04",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 3,
+    "claim": "The fork primitive supports at most thirty-two parallel branches.",
+    "label": "neutral"
+  },
+  {
+    "id": "neutral-spec-01",
+    "source": "Fast Inference from Transformers via Speculative Decoding",
+    "chunk_idx": 6,
+    "claim": "The draft model always accepts exactly eighty percent of its proposed tokens.",
+    "label": "neutral"
+  },
+  {
+    "id": "neutral-spec-02",
+    "source": "Fast Inference from Transformers via Speculative Decoding",
+    "chunk_idx": 27,
+    "claim": "The correctness proof assumes that both models were trained on the same dataset.",
+    "label": "neutral"
+  },
+  {
+    "id": "contradict-paged-01",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 15,
+    "claim": "A block table contains no mapping between logical and physical KV blocks.",
+    "label": "contradiction"
+  },
+  {
+    "id": "contradict-paged-02",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 14,
+    "claim": "PagedAttention requires every request's physical KV blocks to be contiguous.",
+    "label": "contradiction"
+  },
+  {
+    "id": "contradict-paged-03",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 19,
+    "claim": "Parallel samples always store separate copies of all prompt KV blocks.",
+    "label": "contradiction"
+  },
+  {
+    "id": "contradict-paged-04",
+    "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "chunk_idx": 19,
+    "claim": "Writing to a shared block never triggers a copy-on-write operation.",
+    "label": "contradiction"
+  },
+  {
+    "id": "contradict-sglang-01",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 9,
+    "claim": "RadixAttention discards every KV cache entry immediately after generation finishes.",
+    "label": "contradiction"
+  },
+  {
+    "id": "contradict-sglang-02",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 10,
+    "claim": "Cached tokens and running requests use two completely separate fixed-size memory pools.",
+    "label": "contradiction"
+  },
+  {
+    "id": "contradict-sglang-03",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 14,
+    "claim": "SGLang provides no mechanism for regex-constrained decoding.",
+    "label": "contradiction"
+  },
+  {
+    "id": "contradict-sglang-04",
+    "source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "chunk_idx": 3,
+    "claim": "SGLang is not compatible with Python control flow or libraries.",
+    "label": "contradiction"
+  },
+  {
+    "id": "contradict-spec-01",
+    "source": "Fast Inference from Transformers via Speculative Decoding",
+    "chunk_idx": 6,
+    "claim": "The acceptance rate is unrelated to whether draft tokens are accepted.",
+    "label": "contradiction"
+  },
+  {
+    "id": "contradict-spec-02",
+    "source": "Fast Inference from Transformers via Speculative Decoding",
+    "chunk_idx": 27,
+    "claim": "Speculative sampling intentionally changes the target model's output distribution.",
+    "label": "contradiction"
+  }
+]
