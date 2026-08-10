@@ -9,6 +9,7 @@ import streamlit as st
 sys.path.insert(0, os.path.dirname(__file__))
 from backends.ollama_backend import generate as ollama_generate
 from backends.vllm_backend import generate as vllm_generate
+from rag.prompting import INSUFFICIENT_EVIDENCE, build_rag_prompt, retrieval_confidence, should_abstain
 from rag.retriever import build_context, retrieve
 
 st.set_page_config(page_title="RAG Inference Lab", layout="wide")
@@ -38,6 +39,25 @@ with st.sidebar:
             help="Caching and speculation are server-startup settings; this is a label, not a toggle.",
         )
     top_k = st.slider("RAG top-k chunks", 1, 6, 3)
+    retrieval_mode = st.selectbox("Retrieval mode", ["Dense", "Dense + BGE reranker"])
+    use_reranker = retrieval_mode == "Dense + BGE reranker"
+    candidate_k = st.slider(
+        "Dense candidates before reranking",
+        top_k,
+        24,
+        max(top_k, 12),
+        disabled=not use_reranker,
+    )
+    use_abstention = st.checkbox(
+        "Experimental retrieval-confidence gate",
+        value=False,
+        help="Diagnostic only: the default threshold was fitted on 20 small-corpus examples.",
+    )
+    abstention_threshold = st.slider(
+        "Dense-score threshold", 0.0, 1.0, 0.5672, 0.0001, disabled=not use_abstention
+    )
+    if use_abstention:
+        st.warning("This threshold is experimental and is not production-calibrated.")
     max_tokens = st.slider("Maximum output tokens", 32, 512, 128, step=32)
 
 if "history" not in st.session_state:
@@ -50,22 +70,28 @@ with col_chat:
     query = st.text_input("Query", placeholder="What is speculative decoding and when does it help?")
     if st.button("Generate", type="primary") and query:
         with st.spinner("Retrieving context..."):
-            chunks = retrieve(query, top_k=top_k)
+            chunks = retrieve(
+                query, top_k=top_k, rerank=use_reranker, candidate_k=candidate_k
+            )
             context = build_context(chunks)
-        prompt = f"""Use the following retrieved context to answer the question.
-If the context does not contain the answer, say so clearly.
-
-Context:
-{context}
-
-Question: {query}
-Answer:"""
         st.markdown("**Retrieved chunks**")
         for index, chunk in enumerate(chunks):
+            rerank_label = (
+                f", rerank: {chunk['rerank_score']}" if "rerank_score" in chunk else ""
+            )
             with st.expander(
-                f"[{index + 1}] {chunk['source']} (score: {chunk['score']})"
+                f"[S{index + 1}] {chunk['source']} "
+                f"(dense: {chunk['score']}{rerank_label})"
             ):
                 st.text(chunk["text"][:400] + "...")
+        confidence = retrieval_confidence(chunks)
+        if use_abstention and should_abstain(chunks, abstention_threshold):
+            st.warning(
+                f"{INSUFFICIENT_EVIDENCE} Best dense score: {confidence}. "
+                "Generation was skipped by the experimental gate."
+            )
+            st.stop()
+        prompt = build_rag_prompt(query, chunks)
         with st.spinner(f"Generating with {engine} / {model}..."):
             try:
                 if engine == "Ollama":

@@ -15,7 +15,8 @@ from backends.metrics import summarize
 from backends.ollama_backend import generate as ollama_generate
 from backends.preflight import inspect_backend
 from backends.vllm_backend import generate as vllm_generate
-from rag.retriever import build_context, retrieve
+from rag.prompting import build_rag_prompt
+from rag.retriever import retrieve
 
 QUESTIONS = [
     "What is speculative decoding and when does it improve throughput?",
@@ -86,11 +87,7 @@ def environment_snapshot() -> dict:
 
 
 def build_prompt(question: str, chunks: list[dict]) -> str:
-    return (
-        "Use the retrieved context to answer the question. "
-        "If the context does not contain the answer, say so clearly.\n\n"
-        f"Context:\n{build_context(chunks)}\n\nQuestion: {question}\nAnswer:"
-    )
+    return build_rag_prompt(question, chunks)
 
 
 def generate_for_config(prompt: str, cfg: dict, max_tokens: int, seed: int):

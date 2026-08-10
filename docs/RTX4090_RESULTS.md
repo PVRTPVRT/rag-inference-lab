@@ -67,6 +67,10 @@ overlap. A threshold fitted on this diagnostic set (0.5672) rejected all five
 negatives but retained only 13/15 positives, so it is reported as calibration
 evidence rather than installed as a production default.
 
+Evidence-chunk, reranker, answer-fact, and citation A/B results are reported
+separately in [`RAG_QUALITY_RESULTS.md`](RAG_QUALITY_RESULTS.md). In particular,
+the optional reranker is not presented as a universal improvement.
+
 ## Safe interpretation
 
 Supported:

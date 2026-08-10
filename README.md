@@ -15,8 +15,13 @@ separate from measured results, and no speedup is claimed without a saved run.
   OpenAI-compatible usage data.
 - The benchmark supports fail-fast backend checks, repeated trials, P50/P95
   summaries, failure accounting, and server metadata.
+- Retrieval supports optional BGE cross-encoder reranking, stable source IDs,
+  citation-constrained prompting, and an explicitly experimental abstention gate.
+- Source, evidence-chunk, answer-fact, citation, and abstention diagnostics retain
+  raw JSON outputs and negative results.
 - Verified RTX 4090 trials and retrieval-quality diagnostics are summarized in
   [`docs/RTX4090_RESULTS.md`](docs/RTX4090_RESULTS.md).
+- Quality A/B results: [`docs/RAG_QUALITY_RESULTS.md`](docs/RAG_QUALITY_RESULTS.md).
 
 Earlier exploratory numbers were removed because streamed HTTP chunks and
 whitespace-delimited words are not model tokens. The repository now prefers an
@@ -28,6 +33,8 @@ explicit `N/A` over a misleading throughput value.
 - Split text using the BGE-M3 tokenizer with configurable token overlap.
 - Generate BGE-M3 embeddings and persist them in ChromaDB.
 - Retrieve top-k chunks and build source-labeled context.
+- Optionally rerank dense candidates with BGE-reranker-v2-m3.
+- Require stable `[S1]` citations and gate low-confidence queries before generation.
 - Serve a Streamlit UI across Ollama GGUF and vLLM FP16 backends.
 - Measure client TTFT, end-to-end latency, decode throughput, and device-wide
   VRAM usage with clearly labeled measurement sources.
@@ -40,6 +47,8 @@ app.py                       Streamlit RAG interface
 benchmark.py                 Repeated benchmark runner and JSON output
 evaluate_retrieval.py        Labeled source-level Hit@k and MRR evaluation
 evaluate_abstention.py       Out-of-corpus score-overlap diagnostic
+evaluate_evidence.py         Manually labeled evidence-chunk evaluation
+evaluate_answers.py          Answer facts, citations, and abstention diagnostic
 backends/metrics.py          Dependency-free metric aggregation
 backends/ollama_backend.py   Ollama streaming client and server metrics
 backends/preflight.py        Server/model/version and VRAM-isolation checks
@@ -48,6 +57,8 @@ evaluation/                  Labeled positive and out-of-corpus query sets
 rag/chunking.py              Tokenizer-aware chunking
 rag/ingest.py                PDF ingestion and ChromaDB indexing
 rag/retriever.py             BGE-M3 retrieval and context construction
+rag/reranker.py              Optional BGE cross-encoder reranking
+rag/prompting.py             Citation contract and experimental gate
 docs/BENCHMARK_PROTOCOL.md   Claim and reproduction rules
 docs/RTX4090_RESULTS.md      Verified results and claim boundaries
 results/                     Published raw serving and retrieval trials
@@ -85,6 +96,10 @@ ollama serve
 ollama pull qwen2.5:7b-instruct-q4_K_M
 streamlit run app.py
 ```
+
+The sidebar can switch between dense retrieval and dense-plus-reranker. Reranking
+defaults to CPU unless `RAG_RERANK_DEVICE=cuda:0` is set. The abstention gate is
+off by default because its threshold is not production-calibrated.
 
 For vLLM, start a server separately and enter its OpenAI-compatible URL in the
 sidebar. Prefix caching and speculative decoding are server-startup settings;
@@ -160,7 +175,7 @@ The core tests require only the Python standard library:
 
 ```bash
 python -m unittest discover -s tests -v
-python -m compileall -q app.py benchmark.py backends rag tests
+python -m compileall -q app.py benchmark.py evaluate_*.py backends rag evaluation tests
 ```
 
 ## Interpretation boundaries
@@ -171,7 +186,9 @@ This repository does not currently claim that:
 - prefix caching reduces TTFT for cold or unrelated prompts by the measured amount;
 - n-gram speculation necessarily improves throughput;
 - a particular chunk length triggers or avoids an SDPA fallback;
-- five fixed questions measure retrieval or answer quality.
+- five fixed questions measure retrieval or answer quality;
+- cross-encoder reranking is universally better than dense retrieval;
+- citation IDs establish claim-level entailment or the fitted gate generalizes.
 
 Those are hypotheses to test under controlled conditions. See
 [`docs/BENCHMARK_PROTOCOL.md`](docs/BENCHMARK_PROTOCOL.md) before publishing

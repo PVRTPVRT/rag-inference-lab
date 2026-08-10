@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import platform
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -21,6 +22,8 @@ def main() -> None:
         default=Path("evaluation/retrieval_cases.json"),
     )
     parser.add_argument("--top-k", type=int, default=3)
+    parser.add_argument("--rerank", action="store_true")
+    parser.add_argument("--candidate-k", type=int, default=12)
     parser.add_argument(
         "--output",
         type=Path,
@@ -29,11 +32,20 @@ def main() -> None:
     args = parser.parse_args()
     if args.top_k < 1:
         parser.error("top-k must be >= 1")
+    if args.candidate_k < args.top_k:
+        parser.error("candidate-k must be >= top-k")
 
     cases = json.loads(args.cases.read_text(encoding="utf-8"))
     trials = []
     for index, case in enumerate(cases):
-        chunks = retrieve(case["question"], top_k=args.top_k)
+        started = time.perf_counter()
+        chunks = retrieve(
+            case["question"],
+            top_k=args.top_k,
+            rerank=args.rerank,
+            candidate_k=args.candidate_k,
+        )
+        retrieval_ms = round((time.perf_counter() - started) * 1000, 3)
         returned_sources = [chunk["source"] for chunk in chunks]
         rank = rank_of_expected(returned_sources, case["expected_source"])
         trial = {
@@ -42,6 +54,9 @@ def main() -> None:
             "expected_source": case["expected_source"],
             "returned_sources": returned_sources,
             "scores": [chunk["score"] for chunk in chunks],
+            "rerank_scores": [chunk.get("rerank_score") for chunk in chunks],
+            "returned_chunk_indices": [chunk.get("chunk_idx") for chunk in chunks],
+            "retrieval_ms": retrieval_ms,
             "first_relevant_rank": rank,
             "hit": rank is not None,
         }
@@ -62,6 +77,9 @@ def main() -> None:
         ]
         per_source[source] = summarize_ranks(source_ranks, top_k=args.top_k)
 
+    latencies = [trial["retrieval_ms"] for trial in trials]
+    mean_retrieval_ms = round(sum(latencies) / len(latencies), 3) if latencies else None
+
     payload = {
         "schema_version": 1,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -70,14 +88,22 @@ def main() -> None:
             "platform": platform.platform(),
             "embedding_model": EMBED_MODEL,
             "embedding_device": os.getenv("RAG_EMBED_DEVICE", "cpu"),
+            "reranker_model": "BAAI/bge-reranker-v2-m3" if args.rerank else None,
+            "reranker_device": os.getenv("RAG_RERANK_DEVICE", "cpu") if args.rerank else None,
         },
         "protocol": {
             "task": "source-level retrieval",
             "cases": len(cases),
             "top_k": args.top_k,
+            "rerank": args.rerank,
+            "candidate_k": args.candidate_k if args.rerank else args.top_k,
             "annotation": "one expected paper title per query",
         },
-        "summary": {**summary, "per_source": per_source},
+        "summary": {
+            **summary,
+            "mean_retrieval_ms_including_model_warmup": mean_retrieval_ms,
+            "per_source": per_source,
+        },
         "trials": trials,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
