@@ -6,11 +6,13 @@ import argparse
 import json
 import os
 import platform
+import statistics
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 from evaluation.retrieval_metrics import rank_of_expected, summarize_ranks
+from rag.hybrid import BM25_B, BM25_K1
 from rag.retriever import EMBED_MODEL, retrieve
 
 
@@ -23,6 +25,8 @@ def main() -> None:
     )
     parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--rerank", action="store_true")
+    parser.add_argument("--retrieval", choices=("dense", "sparse", "hybrid"), default="dense")
+    parser.add_argument("--rrf-k", type=int, default=60)
     parser.add_argument("--candidate-k", type=int, default=12)
     parser.add_argument(
         "--output",
@@ -35,6 +39,8 @@ def main() -> None:
     if args.candidate_k < args.top_k:
         parser.error("candidate-k must be >= top-k")
 
+    if args.rerank and args.retrieval != "dense":
+        parser.error("rerank requires --retrieval dense")
     cases = json.loads(args.cases.read_text(encoding="utf-8"))
     trials = []
     for index, case in enumerate(cases):
@@ -44,6 +50,8 @@ def main() -> None:
             top_k=args.top_k,
             rerank=args.rerank,
             candidate_k=args.candidate_k,
+            retrieval=args.retrieval,
+            rrf_k=args.rrf_k,
         )
         retrieval_ms = round((time.perf_counter() - started) * 1000, 3)
         returned_sources = [chunk["source"] for chunk in chunks]
@@ -54,6 +62,11 @@ def main() -> None:
             "expected_source": case["expected_source"],
             "returned_sources": returned_sources,
             "scores": [chunk["score"] for chunk in chunks],
+            "dense_scores": [chunk.get("dense_score") for chunk in chunks],
+            "sparse_scores": [chunk.get("sparse_score") for chunk in chunks],
+            "rrf_scores": [chunk.get("rrf_score") for chunk in chunks],
+            "dense_ranks": [chunk.get("dense_rank") for chunk in chunks],
+            "sparse_ranks": [chunk.get("sparse_rank") for chunk in chunks],
             "rerank_scores": [chunk.get("rerank_score") for chunk in chunks],
             "returned_chunk_indices": [chunk.get("chunk_idx") for chunk in chunks],
             "retrieval_ms": retrieval_ms,
@@ -78,6 +91,7 @@ def main() -> None:
         per_source[source] = summarize_ranks(source_ranks, top_k=args.top_k)
 
     latencies = [trial["retrieval_ms"] for trial in trials]
+    steady = latencies[1:]
     mean_retrieval_ms = round(sum(latencies) / len(latencies), 3) if latencies else None
 
     payload = {
@@ -86,8 +100,8 @@ def main() -> None:
         "environment": {
             "python": platform.python_version(),
             "platform": platform.platform(),
-            "embedding_model": EMBED_MODEL,
-            "embedding_device": os.getenv("RAG_EMBED_DEVICE", "cpu"),
+            "embedding_model": EMBED_MODEL if args.retrieval != "sparse" else None,
+            "embedding_device": os.getenv("RAG_EMBED_DEVICE", "cpu") if args.retrieval != "sparse" else None,
             "reranker_model": "BAAI/bge-reranker-v2-m3" if args.rerank else None,
             "reranker_device": os.getenv("RAG_RERANK_DEVICE", "cpu") if args.rerank else None,
         },
@@ -95,13 +109,20 @@ def main() -> None:
             "task": "source-level retrieval",
             "cases": len(cases),
             "top_k": args.top_k,
+            "retrieval": args.retrieval,
+            "rrf_k": args.rrf_k if args.retrieval == "hybrid" else None,
+            "bm25_k1": BM25_K1 if args.retrieval != "dense" else None,
+            "bm25_b": BM25_B if args.retrieval != "dense" else None,
             "rerank": args.rerank,
-            "candidate_k": args.candidate_k if args.rerank else args.top_k,
+            "candidate_k": args.candidate_k if args.rerank or args.retrieval == "hybrid" else args.top_k,
             "annotation": "one expected paper title per query",
         },
         "summary": {
             **summary,
             "mean_retrieval_ms_including_model_warmup": mean_retrieval_ms,
+            "cold_first_retrieval_ms": latencies[0] if latencies else None,
+            "steady_retrieval_mean_ms": round(statistics.mean(steady), 3) if steady else None,
+            "steady_retrieval_p50_ms": round(statistics.median(steady), 3) if steady else None,
             "per_source": per_source,
         },
         "trials": trials,

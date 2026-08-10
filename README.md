@@ -19,6 +19,9 @@ separate from measured results, and no speedup is claimed without a saved run.
   citation-constrained prompting, and an explicitly experimental abstention gate.
 - Source, evidence-chunk, answer-fact, citation, and abstention diagnostics retain
   raw JSON outputs and negative results.
+- A dependency-free BM25 path and equal-weight reciprocal-rank fusion (RRF) are
+  available for controlled dense/sparse/hybrid retrieval diagnostics; dense
+  retrieval remains the default.
 - Claim-to-citation NLI has a balanced 30-pair diagnostic, evidence focusing,
   confusion matrices, and generated-answer checks; it is not an online blocker.
 - Verified RTX 4090 trials and retrieval-quality diagnostics are summarized in
@@ -35,6 +38,8 @@ explicit `N/A` over a misleading throughput value.
 - Split text using the BGE-M3 tokenizer with configurable token overlap.
 - Generate BGE-M3 embeddings and persist them in ChromaDB.
 - Retrieve top-k chunks and build source-labeled context.
+- Compare dense retrieval, in-memory BM25, and equal-weight RRF while retaining
+  component ranks and scores in raw evaluation output.
 - Optionally rerank dense candidates with BGE-reranker-v2-m3.
 - Require stable `[S1]` citations and gate low-confidence queries before generation.
 - Diagnose whether cited evidence entails each claim with a local three-way NLI
@@ -63,6 +68,7 @@ evaluation/                  Labeled positive and out-of-corpus query sets
 rag/chunking.py              Tokenizer-aware chunking
 rag/ingest.py                PDF ingestion and ChromaDB indexing
 rag/retriever.py             BGE-M3 retrieval and context construction
+rag/hybrid.py                Dependency-free BM25 and RRF fusion
 rag/reranker.py              Optional BGE cross-encoder reranking
 rag/prompting.py             Citation contract and experimental gate
 rag/entailment.py            Claim extraction, evidence focusing, and local NLI
@@ -195,6 +201,9 @@ This repository does not currently claim that:
 - a particular chunk length triggers or avoids an SDPA fallback;
 - five fixed questions measure retrieval or answer quality;
 - cross-encoder reranking is universally better than dense retrieval;
+- BM25 latency on 127 in-memory chunks represents production-scale sparse search;
+- equal-weight RRF universally improves dense retrieval or has tuned fusion
+  weights;
 - the small one-annotator NLI diagnostic is production-calibrated groundedness;
 - citation IDs establish claim-level entailment or the fitted gate generalizes.
 

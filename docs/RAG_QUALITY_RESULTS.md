@@ -23,6 +23,50 @@ The reranker did not improve the saturated source-level task, moved one relevant
 evidence result from rank 1 to rank 2, and increased steady retrieval p50 by
 56.8%. It remains an optional, measured trade-off rather than the default.
 
+## Sparse and hybrid retrieval
+
+A dependency-free Okapi BM25 implementation (`k1=1.5`, `b=0.75`) was compared
+with dense BGE-M3 and equal-weight reciprocal-rank fusion (`RRF k=60`). Hybrid
+retrieval fused the top 12 candidates from each component and returned top-3.
+The 12 lexical challenge cases were written before running the comparison and
+target exact APIs, symbols, acronyms, and equations in the indexed papers.
+
+| Evaluation | Retrieval | Hit@3 | MRR | Steady p50 |
+|---|---|---:|---:|---:|
+| Evidence labels (8) | Dense | 1.0000 | 1.0000 | 99.319 ms |
+| Evidence labels (8) | BM25 | 1.0000 | 0.9375 | 0.233 ms |
+| Evidence labels (8) | Equal RRF | 1.0000 | 0.9375 | 94.894 ms |
+| Lexical challenge (12) | Dense | 0.9167 | 0.8333 | 102.655 ms |
+| Lexical challenge (12) | BM25 | 1.0000 | 1.0000 | 0.211 ms |
+| Lexical challenge (12) | Equal RRF | 0.9167 | 0.9167 | 96.639 ms |
+
+The original 15 source-label cases were saturated: dense and RRF both scored
+Hit@3/MRR 1.0000/1.0000, while BM25 scored 1.0000/0.9556. On the lexical set,
+BM25 recovered all cases and improved both metrics. Equal RRF improved MRR over
+dense but did not recover the missed top-3 case: the relevant SGLang cache-hit
+chunk ranked 11th in dense, 1st in BM25, and 4th after fusion because nearby
+overlapping chunks occupied the first three fused ranks.
+
+No fusion weights were tuned after observing this result. Dense remains the
+application default; sparse and hybrid modes are evaluation options. BM25's
+sub-millisecond steady latency reflects a Python in-memory scan of only 127
+chunks and must not be extrapolated to a distributed production index. The
+lexical set is corpus-derived and single-annotator, not held-out external data.
+
+Reproduce the lexical comparison:
+
+```bash
+RAG_EMBED_DEVICE=cpu python evaluate_evidence.py \
+  --cases evaluation/lexical_cases.json --retrieval dense \
+  --output results/retrieval/dense_lexical_n12.json
+python evaluate_evidence.py --cases evaluation/lexical_cases.json \
+  --retrieval sparse --output results/retrieval/sparse_lexical_n12.json
+RAG_EMBED_DEVICE=cpu python evaluate_evidence.py \
+  --cases evaluation/lexical_cases.json --retrieval hybrid \
+  --candidate-k 12 --rrf-k 60 \
+  --output results/retrieval/hybrid_rrf60_lexical_n12.json
+```
+
 ## Answer and citation diagnostic
 
 Eight deterministic Qwen2.5-7B-Instruct Q4 cases were used: five answerable
@@ -136,6 +180,10 @@ RAG_NLI_DEVICE=cuda:0 python evaluate_answer_grounding.py \
 - The corpus has only three related systems papers and the test sets are small.
 - Evidence labels were manually derived from the indexed PDFs but were not
   independently double-annotated.
+- The lexical challenge set is corpus-derived, has one annotator, and was not
+  evaluated on external documents.
+- BM25 uses a simple alphanumeric tokenizer and an in-memory full-corpus scan;
+  it has no stemming, Unicode-aware segmentation, or production index backend.
 - Term-group recall can miss valid paraphrases and does not measure entailment.
 - The 30-pair NLI set has one annotator and generated claims lack independent labels.
 - Evidence focusing is lexical and can miss mathematical or low-overlap support.

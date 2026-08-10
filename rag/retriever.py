@@ -3,6 +3,7 @@ import os
 
 import chromadb
 from FlagEmbedding import BGEM3FlagModel
+from rag.hybrid import BM25Index, reciprocal_rank_fusion
 
 CHROMA_PATH = "./chroma_db"
 COLLECTION_NAME = "papers"
@@ -10,6 +11,8 @@ EMBED_MODEL = "BAAI/bge-m3"
 MAX_LENGTH = 512
 
 _model: BGEM3FlagModel | None = None
+_sparse_chunks = None
+_sparse_index = None
 _col = None
 
 
@@ -33,25 +36,68 @@ def _get_collection():
     return _col
 
 
+def _get_sparse_corpus() -> tuple[list[dict], BM25Index]:
+    global _sparse_chunks, _sparse_index
+    if _sparse_chunks is None or _sparse_index is None:
+        payload = _get_collection().get(include=["documents", "metadatas"])
+        rows = [
+            {
+                "source": metadata["source"],
+                "chunk_idx": metadata.get("chunk_idx"),
+                "text": document,
+            }
+            for document, metadata in zip(payload["documents"], payload["metadatas"])
+        ]
+        _sparse_chunks = sorted(
+            rows,
+            key=lambda row: (str(row["source"]), int(row["chunk_idx"])),
+        )
+        _sparse_index = BM25Index([row["text"] for row in _sparse_chunks])
+    return _sparse_chunks, _sparse_index
+
+
+def _sparse_retrieve(query: str, top_k: int) -> list[dict]:
+    chunks, index = _get_sparse_corpus()
+    return [
+        {
+            **chunks[position],
+            "score": round(score, 6),
+            "sparse_score": round(score, 6),
+        }
+        for position, score in index.rank(query, top_k)
+    ]
+
+
 def retrieve(
     query: str,
     top_k: int = 3,
     *,
     rerank: bool = False,
     candidate_k: int = 12,
+    retrieval: str = "dense",
+    rrf_k: int = 60,
 ) -> list[dict]:
-    """Retrieve dense top-k chunks, optionally reranking a larger candidate set."""
+    """Retrieve with dense, sparse, or RRF hybrid ranking."""
     if top_k < 1:
         raise ValueError("top_k must be >= 1")
     if candidate_k < top_k:
         raise ValueError("candidate_k must be >= top_k")
+    if retrieval not in {"dense", "sparse", "hybrid"}:
+        raise ValueError("retrieval must be dense, sparse, or hybrid")
+    if rerank and retrieval != "dense":
+        raise ValueError("reranking currently requires dense retrieval")
+    if retrieval == "sparse":
+        return _sparse_retrieve(query, top_k)
     model = _get_model()
     q_emb = model.encode(
         [query], batch_size=1, max_length=MAX_LENGTH
     )["dense_vecs"][0].tolist()
     col = _get_collection()
-    n_results = candidate_k if rerank else top_k
-    results = col.query(query_embeddings=[q_emb], n_results=n_results, include=["documents", "metadatas", "distances"])
+    n_results = candidate_k if rerank or retrieval == "hybrid" else top_k
+    results = col.query(
+        query_embeddings=[q_emb], n_results=n_results,
+        include=["documents", "metadatas", "distances"],
+    )
     chunks = []
     for doc, meta, dist in zip(
         results["documents"][0], results["metadatas"][0], results["distances"][0]
@@ -63,8 +109,19 @@ def retrieve(
                 "chunk_idx": meta.get("chunk_idx"),
                 "text": doc,
                 "score": round(1 / (1 + dist), 4),
+                "dense_score": round(1 / (1 + dist), 4),
             }
         )
+    if retrieval == "hybrid":
+        sparse_chunks = _sparse_retrieve(query, candidate_k)
+        fused = reciprocal_rank_fusion(
+            {"dense": chunks, "sparse": sparse_chunks}, rrf_k=rrf_k
+        )
+        candidate_max_dense_score = max(chunk["dense_score"] for chunk in chunks)
+        for chunk in fused:
+            chunk["score"] = chunk["rrf_score"]
+            chunk["candidate_max_dense_score"] = candidate_max_dense_score
+        return fused[:top_k]
     if rerank:
         from rag.reranker import rerank_chunks
 
@@ -77,8 +134,20 @@ def retrieve(
 
 
 def build_context(chunks: list[dict]) -> str:
-    return "\n\n".join(
-        f"[S{index} | Source: {chunk['source']} | Chunk: {chunk.get('chunk_idx')} | "
-        f"Dense score: {chunk['score']}]\n{chunk['text']}"
-        for index, chunk in enumerate(chunks, start=1)
-    )
+    entries = []
+    for index, chunk in enumerate(chunks, start=1):
+        scores = []
+        if chunk.get("dense_score") is not None:
+            scores.append(f"Dense score: {chunk['dense_score']}")
+        if chunk.get("sparse_score") is not None:
+            scores.append(f"BM25 score: {chunk['sparse_score']}")
+        if chunk.get("rrf_score") is not None:
+            scores.append(f"RRF score: {chunk['rrf_score']}")
+        if not scores:
+            scores.append(f"Dense score: {chunk['score']}")
+        label = " | ".join(scores)
+        entries.append(
+            f"[S{index} | Source: {chunk['source']} | Chunk: {chunk.get('chunk_idx')} | "
+            f"{label}]\n{chunk['text']}"
+        )
+    return "\n\n".join(entries)
