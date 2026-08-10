@@ -75,7 +75,8 @@ A result is publication-ready only when:
 
 ## Current evidence status
 
-No corrected GPU benchmark JSON is committed at this time. Consequently, the
-repository makes no numeric claim for Q4 vs Q8, prefix caching, or speculative
-decoding. That is an intentional evidence boundary, not a missing result to fill
-with an estimate.
+Corrected RTX 4090 serving trials and retrieval diagnostics are committed under
+`results/`. Claims are limited to the recorded WSL2 environment, warm/cold state,
+and labeled workload. They do not establish answer quality, cross-engine
+superiority, universal speedups, or a production-ready rejection threshold. See
+[`RTX4090_RESULTS.md`](RTX4090_RESULTS.md) for the accepted interpretation.

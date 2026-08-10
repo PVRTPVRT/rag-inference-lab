@@ -13,6 +13,7 @@ from pathlib import Path
 
 from backends.metrics import summarize
 from backends.ollama_backend import generate as ollama_generate
+from backends.preflight import inspect_backend
 from backends.vllm_backend import generate as vllm_generate
 from rag.retriever import build_context, retrieve
 
@@ -139,6 +140,11 @@ def run_config(
     seed: int,
 ) -> dict:
     print(f"\nRunning {name}: warmup_rounds={warmup}, repeats={repeats}")
+    server = inspect_backend(cfg)
+    print(
+        f"  backend preflight: engine={server['engine']} "
+        f"version={server.get('version') or 'unknown'} model={cfg['model']}"
+    )
     for warmup_round in range(warmup):
         for question_index, question in enumerate(QUESTIONS):
             try:
@@ -168,7 +174,13 @@ def run_config(
                 )
             trials.append(trial)
             print(f"  repeat={repeat + 1} question={question_index + 1}: {trial['status']}")
-    return {"name": name, "config": cfg, "summary": summarize_trials(trials), "trials": trials}
+    return {
+        "name": name,
+        "config": cfg,
+        "server": server,
+        "summary": summarize_trials(trials),
+        "trials": trials,
+    }
 
 
 def print_summary(results: list[dict]) -> None:

@@ -13,10 +13,10 @@ separate from measured results, and no speedup is claimed without a saved run.
 - The RAG pipeline and dual inference backends are implemented.
 - Token counting has been corrected to use Ollama server statistics or vLLM
   OpenAI-compatible usage data.
-- The benchmark supports warmup requests, repeated trials, P50/P95 summaries,
-  failure accounting, and environment metadata.
-- **No newly verified cross-engine GPU result is committed yet.** Run the protocol
-  on your own hardware before making a performance claim.
+- The benchmark supports fail-fast backend checks, repeated trials, P50/P95
+  summaries, failure accounting, and server metadata.
+- Verified RTX 4090 trials and retrieval-quality diagnostics are summarized in
+  [`docs/RTX4090_RESULTS.md`](docs/RTX4090_RESULTS.md).
 
 Earlier exploratory numbers were removed because streamed HTTP chunks and
 whitespace-delimited words are not model tokens. The repository now prefers an
@@ -38,14 +38,20 @@ explicit `N/A` over a misleading throughput value.
 ```text
 app.py                       Streamlit RAG interface
 benchmark.py                 Repeated benchmark runner and JSON output
+evaluate_retrieval.py        Labeled source-level Hit@k and MRR evaluation
+evaluate_abstention.py       Out-of-corpus score-overlap diagnostic
 backends/metrics.py          Dependency-free metric aggregation
 backends/ollama_backend.py   Ollama streaming client and server metrics
+backends/preflight.py        Server/model/version and VRAM-isolation checks
 backends/vllm_backend.py     vLLM OpenAI-compatible streaming client
+evaluation/                  Labeled positive and out-of-corpus query sets
 rag/chunking.py              Tokenizer-aware chunking
 rag/ingest.py                PDF ingestion and ChromaDB indexing
 rag/retriever.py             BGE-M3 retrieval and context construction
 docs/BENCHMARK_PROTOCOL.md   Claim and reproduction rules
-tests/test_core.py           Unit tests for metrics and chunking
+docs/RTX4090_RESULTS.md      Verified results and claim boundaries
+results/                     Published raw serving and retrieval trials
+tests/                       Unit tests for metrics, backends, and evaluation
 ```
 
 ## Installation
@@ -126,6 +132,11 @@ python benchmark.py --engines vllm_ngram --warmup 3 --repeats 3 \
   --output outputs/vllm_ngram.json
 ```
 
+The runner verifies that the selected API and model are available before loading
+the embedding model. For Ollama it also refuses to run when a different model is
+already resident, because NVML reports device-wide memory. Run Q4 and Q8
+separately and use `ollama stop <model>` between VRAM profiles.
+
 Each run records five fixed questions, all trial failures, environment metadata,
 and summary statistics. For a resume-grade comparison, use the same GPU, model,
 software versions, retrieval index, top-k, output limit, temperature, and seed.
@@ -156,9 +167,9 @@ python -m compileall -q app.py benchmark.py backends rag tests
 
 This repository does not currently claim that:
 
-- Q4 is a fixed percentage faster or smaller than Q8;
-- prefix caching always reduces TTFT;
-- n-gram speculation provides a fixed throughput gain;
+- Q4 is universally a fixed percentage faster or smaller than Q8;
+- prefix caching reduces TTFT for cold or unrelated prompts by the measured amount;
+- n-gram speculation necessarily improves throughput;
 - a particular chunk length triggers or avoids an SDPA fallback;
 - five fixed questions measure retrieval or answer quality.
 
