@@ -26,6 +26,28 @@ class FakeCollection:
             "distances": [[0.1, 0.2]],
         }
 
+class FakeParentChildCollection:
+    def query(self, **kwargs):
+        return {
+            "documents": [["child a1", "child a2", "child b1"]],
+            "metadatas": [[
+                {
+                    "source": "A", "parent_chunk_idx": 4,
+                    "child_chunk_idx": 1, "parent_text": "parent a",
+                },
+                {
+                    "source": "A", "parent_chunk_idx": 4,
+                    "child_chunk_idx": 2, "parent_text": "parent a",
+                },
+                {
+                    "source": "B", "parent_chunk_idx": 2,
+                    "child_chunk_idx": 0, "parent_text": "parent b",
+                },
+            ]],
+            "distances": [[0.1, 0.15, 0.2]],
+        }
+
+
 
 class RetrievalModeTests(unittest.TestCase):
     @patch("rag.retriever._get_model")
@@ -82,6 +104,25 @@ class RetrievalModeTests(unittest.TestCase):
         self.assertEqual(chunks[0]["sparse_rank"], 1)
         self.assertEqual(chunks[0]["score"], chunks[0]["rrf_score"])
         self.assertEqual(chunks[0]["candidate_max_dense_score"], 0.9091)
+
+    @patch("rag.retriever._get_parent_child_collection")
+    @patch("rag.retriever._get_model")
+    def test_parent_child_deduplicates_parents_and_returns_parent_text(
+        self, get_model, get_collection
+    ):
+        get_model.return_value = FakeModel()
+        get_collection.return_value = FakeParentChildCollection()
+        chunks = retrieve(
+            "query", retrieval="parent_child", top_k=2, candidate_k=3
+        )
+        self.assertEqual(len(chunks), 2)
+        self.assertEqual(chunks[0]["text"], "parent a")
+        self.assertEqual(chunks[0]["chunk_idx"], 4)
+        self.assertEqual(chunks[0]["child_chunk_idx"], 1)
+        self.assertEqual(chunks[0]["child_rank"], 1)
+        self.assertEqual(chunks[1]["text"], "parent b")
+        self.assertEqual(chunks[1]["child_rank"], 3)
+        self.assertEqual(chunks[1]["candidate_max_dense_score"], 0.9091)
 
     def test_rejects_incompatible_or_unknown_modes(self):
         with self.assertRaises(ValueError):

@@ -8,6 +8,7 @@ from backends.metrics import (
     tokens_per_second,
 )
 from rag.chunking import chunk_text, chunk_token_ids
+from rag.parent_child import build_parent_child_records
 
 
 class FakeTokenizer:
@@ -49,6 +50,20 @@ class ChunkingTests(unittest.TestCase):
     def test_text_chunking_uses_tokenizer(self):
         chunks = chunk_text("a b c d e", FakeTokenizer(), size=3, overlap=1)
         self.assertEqual(chunks, ["0 1 2", "2 3 4"])
+
+    def test_parent_child_records_preserve_parent_mapping(self):
+        records = build_parent_child_records(
+            "a b c d e f g h i j",
+            FakeTokenizer(),
+            parent_size=6,
+            parent_overlap=2,
+            child_size=3,
+            child_overlap=1,
+        )
+        parent_indices = [row["parent_chunk_idx"] for row in records]
+        self.assertEqual(parent_indices, [0, 0, 0, 1, 1, 1])
+        self.assertEqual(records[0]["parent_text"], "0 1 2 3 4 5")
+        self.assertEqual(records[3]["child_text"], "0 1 2")
 
 
 if __name__ == "__main__":

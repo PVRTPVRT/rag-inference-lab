@@ -11,6 +11,12 @@ from FlagEmbedding import BGEM3FlagModel
 from transformers import AutoTokenizer
 
 from rag.chunking import chunk_text
+from rag.parent_child import (
+    CHILD_CHUNK_SIZE,
+    PARENT_CHILD_COLLECTION_NAME,
+    PARENT_CHUNK_SIZE,
+    build_parent_child_records,
+)
 
 CHROMA_PATH = "./chroma_db"
 COLLECTION_NAME = "papers"
@@ -59,6 +65,7 @@ def ingest(
     n: int = 3,
     embed_device: str = "cuda:0",
     arxiv_ids: list[str] | None = None,
+    parent_child: bool = False,
 ):
     source = f"fixed arXiv IDs: {', '.join(arxiv_ids)}" if arxiv_ids else f"query: '{query}'"
     print(f"[1/4] Downloading papers from {source}")
@@ -66,16 +73,32 @@ def ingest(
 
     print("[2/4] Extracting and chunking text by BGE-M3 tokenizer tokens")
     tokenizer = AutoTokenizer.from_pretrained(EMBED_MODEL)
+    collection_name = PARENT_CHILD_COLLECTION_NAME if parent_child else COLLECTION_NAME
     all_chunks, all_ids, all_metas = [], [], []
     for path in paths:
         title = os.path.splitext(os.path.basename(path))[0]
         text = extract_text(path)
-        chunks = chunk_text(text, tokenizer, size=CHUNK_SIZE, overlap=CHUNK_OVERLAP)
-        for i, chunk in enumerate(chunks):
-            all_chunks.append(chunk)
-            all_ids.append(f"{title}__chunk_{i}")
-            all_metas.append({"source": title, "chunk_idx": i})
-    print(f"   Total chunks: {len(all_chunks)}")
+        if parent_child:
+            records = build_parent_child_records(text, tokenizer)
+            for record in records:
+                parent_index = record["parent_chunk_idx"]
+                child_index = record["child_chunk_idx"]
+                all_chunks.append(record["child_text"])
+                all_ids.append(f"{title}__parent_{parent_index}__child_{child_index}")
+                all_metas.append({
+                    "source": title,
+                    "parent_chunk_idx": parent_index,
+                    "child_chunk_idx": child_index,
+                    "parent_text": record["parent_text"],
+                })
+        else:
+            chunks = chunk_text(text, tokenizer, size=CHUNK_SIZE, overlap=CHUNK_OVERLAP)
+            for i, chunk in enumerate(chunks):
+                all_chunks.append(chunk)
+                all_ids.append(f"{title}__chunk_{i}")
+                all_metas.append({"source": title, "chunk_idx": i})
+    unit = "child chunks" if parent_child else "chunks"
+    print(f"   Total {unit}: {len(all_chunks)}")
 
     print(f"[3/4] Generating embeddings with BGE-M3 on {embed_device}")
     model = BGEM3FlagModel(
@@ -83,17 +106,18 @@ def ingest(
         devices=embed_device,
         use_fp16=embed_device.startswith("cuda"),
     )
+    embedding_length = CHILD_CHUNK_SIZE if parent_child else CHUNK_SIZE
     embeddings = model.encode(
-        all_chunks, batch_size=32, max_length=CHUNK_SIZE
+        all_chunks, batch_size=32, max_length=embedding_length
     )["dense_vecs"].tolist()
 
-    print("[4/4] Storing in ChromaDB")
+    print(f"[4/4] Storing in ChromaDB collection '{collection_name}'")
     client = chromadb.PersistentClient(path=CHROMA_PATH)
     try:
-        client.delete_collection(COLLECTION_NAME)
+        client.delete_collection(collection_name)
     except Exception:
         pass
-    col = client.create_collection(COLLECTION_NAME)
+    col = client.create_collection(collection_name)
     batch = 500
     for start in range(0, len(all_chunks), batch):
         col.add(
@@ -119,5 +143,10 @@ if __name__ == "__main__":
         nargs="+",
         help="Fixed arXiv IDs for a reproducible corpus; overrides query-based discovery",
     )
+    parser.add_argument(
+        "--parent-child",
+        action="store_true",
+        help="Build a separate child-vector index that returns 512-token parents",
+    )
     args = parser.parse_args()
-    ingest(args.query, args.n, args.embed_device, args.arxiv_ids)
+    ingest(args.query, args.n, args.embed_device, args.arxiv_ids, args.parent_child)

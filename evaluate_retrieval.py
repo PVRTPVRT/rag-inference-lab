@@ -14,6 +14,12 @@ from pathlib import Path
 from evaluation.retrieval_metrics import rank_of_expected, summarize_ranks
 from rag.hybrid import BM25_B, BM25_K1
 from rag.retriever import EMBED_MODEL, retrieve
+from rag.parent_child import (
+    CHILD_CHUNK_OVERLAP,
+    CHILD_CHUNK_SIZE,
+    PARENT_CHUNK_OVERLAP,
+    PARENT_CHUNK_SIZE,
+)
 
 
 def main() -> None:
@@ -25,7 +31,11 @@ def main() -> None:
     )
     parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--rerank", action="store_true")
-    parser.add_argument("--retrieval", choices=("dense", "sparse", "hybrid"), default="dense")
+    parser.add_argument(
+        "--retrieval",
+        choices=("dense", "sparse", "hybrid", "parent_child"),
+        default="dense",
+    )
     parser.add_argument("--rrf-k", type=int, default=60)
     parser.add_argument("--candidate-k", type=int, default=12)
     parser.add_argument(
@@ -67,6 +77,8 @@ def main() -> None:
             "rrf_scores": [chunk.get("rrf_score") for chunk in chunks],
             "dense_ranks": [chunk.get("dense_rank") for chunk in chunks],
             "sparse_ranks": [chunk.get("sparse_rank") for chunk in chunks],
+            "child_chunk_indices": [chunk.get("child_chunk_idx") for chunk in chunks],
+            "child_ranks": [chunk.get("child_rank") for chunk in chunks],
             "rerank_scores": [chunk.get("rerank_score") for chunk in chunks],
             "returned_chunk_indices": [chunk.get("chunk_idx") for chunk in chunks],
             "retrieval_ms": retrieval_ms,
@@ -111,10 +123,14 @@ def main() -> None:
             "top_k": args.top_k,
             "retrieval": args.retrieval,
             "rrf_k": args.rrf_k if args.retrieval == "hybrid" else None,
-            "bm25_k1": BM25_K1 if args.retrieval != "dense" else None,
-            "bm25_b": BM25_B if args.retrieval != "dense" else None,
+            "bm25_k1": BM25_K1 if args.retrieval in {"sparse", "hybrid"} else None,
+            "bm25_b": BM25_B if args.retrieval in {"sparse", "hybrid"} else None,
+            "parent_chunk_size": PARENT_CHUNK_SIZE if args.retrieval == "parent_child" else None,
+            "parent_chunk_overlap": PARENT_CHUNK_OVERLAP if args.retrieval == "parent_child" else None,
+            "child_chunk_size": CHILD_CHUNK_SIZE if args.retrieval == "parent_child" else None,
+            "child_chunk_overlap": CHILD_CHUNK_OVERLAP if args.retrieval == "parent_child" else None,
             "rerank": args.rerank,
-            "candidate_k": args.candidate_k if args.rerank or args.retrieval == "hybrid" else args.top_k,
+            "candidate_k": args.candidate_k if args.rerank or args.retrieval in {"hybrid", "parent_child"} else args.top_k,
             "annotation": "one expected paper title per query",
         },
         "summary": {

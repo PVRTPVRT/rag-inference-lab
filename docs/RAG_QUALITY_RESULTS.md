@@ -67,6 +67,53 @@ RAG_EMBED_DEVICE=cpu python evaluate_evidence.py \
   --output results/retrieval/hybrid_rrf60_lexical_n12.json
 ```
 
+## Parent-child retrieval
+
+A separate Chroma collection was built with the same 127 labeled 512-token
+parents as the dense baseline. Each parent was split into 192-token children
+with 32-token overlap, producing 394 searchable child vectors. Retrieval queried
+the top 12 children, deduplicated by `(source, parent_chunk_idx)`, and returned
+the top three complete parents. This preserves the existing evidence labels and
+changes only the search granularity.
+
+| Evaluation | Retrieval | Hit@3 | MRR | Steady p50 |
+|---|---|---:|---:|---:|
+| Evidence labels (8) | Dense | 1.0000 | 1.0000 | 99.319 ms |
+| Evidence labels (8) | Parent-child | 1.0000 | 1.0000 | 121.943 ms |
+| Lexical challenge (12) | Dense | 0.9167 | 0.8333 | 102.655 ms |
+| Lexical challenge (12) | Parent-child | 0.9167 | 0.8750 | 107.916 ms |
+| Source labels (15) | Dense | 1.0000 | 1.0000 | 103.458 ms |
+| Source labels (15) | Parent-child | 1.0000 | 1.0000 | 103.846 ms |
+
+Parent-child retrieval preserved the saturated evidence and source metrics and
+slightly improved lexical MRR, but it did not recover the missed SGLang cache-hit
+case. Its returned parents for that query were chunks 43, 19, and 18; the labeled
+relevant chunks were 9 and 12. It was also slower on the evidence and lexical
+sets. Therefore this path remains an explicit evaluation mode rather than the
+application default. Child size, overlap, and candidate count were not retuned
+after observing the result.
+
+Reproduce the separate index and evaluation:
+
+```bash
+python -m rag.ingest \
+  --arxiv-ids 2309.06180 2211.17192 2312.07104 \
+  --embed-device cuda:0 --parent-child
+
+RAG_EMBED_DEVICE=cpu python evaluate_evidence.py \
+  --retrieval parent_child --candidate-k 12 \
+  --output results/retrieval/parent_child_evidence_n8.json
+
+RAG_EMBED_DEVICE=cpu python evaluate_evidence.py \
+  --cases evaluation/lexical_cases.json \
+  --retrieval parent_child --candidate-k 12 \
+  --output results/retrieval/parent_child_lexical_n12.json
+
+RAG_EMBED_DEVICE=cpu python evaluate_retrieval.py \
+  --retrieval parent_child --candidate-k 12 \
+  --output results/retrieval/parent_child_source_n15.json
+```
+
 ## Answer and citation diagnostic
 
 Eight deterministic Qwen2.5-7B-Instruct Q4 cases were used: five answerable
@@ -184,6 +231,10 @@ RAG_NLI_DEVICE=cuda:0 python evaluate_answer_grounding.py \
   evaluated on external documents.
 - BM25 uses a simple alphanumeric tokenizer and an in-memory full-corpus scan;
   it has no stemming, Unicode-aware segmentation, or production index backend.
+- Parent text is duplicated in child metadata for this small local experiment;
+  a production index should store parents separately and reference them by ID.
+- Parent-child sizes and candidate depth have one fixed configuration and no
+  external held-out validation.
 - Term-group recall can miss valid paraphrases and does not measure entailment.
 - The 30-pair NLI set has one annotator and generated claims lack independent labels.
 - Evidence focusing is lexical and can miss mathematical or low-overlap support.

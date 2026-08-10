@@ -22,6 +22,9 @@ separate from measured results, and no speedup is claimed without a saved run.
 - A dependency-free BM25 path and equal-weight reciprocal-rank fusion (RRF) are
   available for controlled dense/sparse/hybrid retrieval diagnostics; dense
   retrieval remains the default.
+- A separate parent-child index retrieves 192-token children and returns their
+  512-token parents; its measured results are published without making it the
+  application default.
 - Claim-to-citation NLI has a balanced 30-pair diagnostic, evidence focusing,
   confusion matrices, and generated-answer checks; it is not an online blocker.
 - Verified RTX 4090 trials and retrieval-quality diagnostics are summarized in
@@ -32,7 +35,6 @@ Earlier exploratory numbers were removed because streamed HTTP chunks and
 whitespace-delimited words are not model tokens. The repository now prefers an
 explicit `N/A` over a misleading throughput value.
 
-## What is implemented
 
 - Download and parse arXiv PDFs with PyMuPDF.
 - Split text using the BGE-M3 tokenizer with configurable token overlap.
@@ -40,6 +42,8 @@ explicit `N/A` over a misleading throughput value.
 - Retrieve top-k chunks and build source-labeled context.
 - Compare dense retrieval, in-memory BM25, and equal-weight RRF while retaining
   component ranks and scores in raw evaluation output.
+- Evaluate parent-child retrieval with child-level matching, parent deduplication,
+  and full parent context returned to the generator.
 - Optionally rerank dense candidates with BGE-reranker-v2-m3.
 - Require stable `[S1]` citations and gate low-confidence queries before generation.
 - Diagnose whether cited evidence entails each claim with a local three-way NLI
@@ -69,6 +73,7 @@ rag/chunking.py              Tokenizer-aware chunking
 rag/ingest.py                PDF ingestion and ChromaDB indexing
 rag/retriever.py             BGE-M3 retrieval and context construction
 rag/hybrid.py                Dependency-free BM25 and RRF fusion
+rag/parent_child.py          Parent-child chunk construction and index constants
 rag/reranker.py              Optional BGE cross-encoder reranking
 rag/prompting.py             Citation contract and experimental gate
 rag/entailment.py            Claim extraction, evidence focusing, and local NLI
@@ -95,10 +100,17 @@ environments, and benchmark outputs are ignored by Git.
 
 ```bash
 python -m rag.ingest --query "LLM inference optimization" --n 3
+
+python -m rag.ingest \
+  --arxiv-ids 2309.06180 2211.17192 2312.07104 \
+  --embed-device cuda:0 --parent-child
 ```
 
 The default uses 512 **BGE-M3 tokenizer tokens** with 50-token overlap. Chunk
 length is a retrieval configuration, not a claim about GPU kernel alignment.
+The optional command creates a separate `papers_parent_child` collection with
+192-token children, 32-token child overlap, and the same 512-token parents used
+by the baseline labels; it does not overwrite the default `papers` collection.
 
 ## Run the UI
 
@@ -204,6 +216,8 @@ This repository does not currently claim that:
 - BM25 latency on 127 in-memory chunks represents production-scale sparse search;
 - equal-weight RRF universally improves dense retrieval or has tuned fusion
   weights;
+- parent-child retrieval improves every query, reduces latency, or has been tuned
+  on an external held-out corpus;
 - the small one-annotator NLI diagnostic is production-calibrated groundedness;
 - citation IDs establish claim-level entailment or the fitted gate generalizes.
 

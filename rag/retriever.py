@@ -5,6 +5,7 @@ import chromadb
 from FlagEmbedding import BGEM3FlagModel
 from rag.hybrid import BM25Index, reciprocal_rank_fusion
 
+from rag.parent_child import PARENT_CHILD_COLLECTION_NAME
 CHROMA_PATH = "./chroma_db"
 COLLECTION_NAME = "papers"
 EMBED_MODEL = "BAAI/bge-m3"
@@ -13,6 +14,7 @@ MAX_LENGTH = 512
 _model: BGEM3FlagModel | None = None
 _sparse_chunks = None
 _sparse_index = None
+_parent_child_col = None
 _col = None
 
 
@@ -34,6 +36,13 @@ def _get_collection():
         client = chromadb.PersistentClient(path=CHROMA_PATH)
         _col = client.get_collection(COLLECTION_NAME)
     return _col
+
+def _get_parent_child_collection():
+    global _parent_child_col
+    if _parent_child_col is None:
+        client = chromadb.PersistentClient(path=CHROMA_PATH)
+        _parent_child_col = client.get_collection(PARENT_CHILD_COLLECTION_NAME)
+    return _parent_child_col
 
 
 def _get_sparse_corpus() -> tuple[list[dict], BM25Index]:
@@ -67,6 +76,46 @@ def _sparse_retrieve(query: str, top_k: int) -> list[dict]:
         for position, score in index.rank(query, top_k)
     ]
 
+def _parent_child_retrieve(query: str, top_k: int, candidate_k: int) -> list[dict]:
+    model = _get_model()
+    query_embedding = model.encode(
+        [query], batch_size=1, max_length=MAX_LENGTH
+    )["dense_vecs"][0].tolist()
+    results = _get_parent_child_collection().query(
+        query_embeddings=[query_embedding],
+        n_results=candidate_k,
+        include=["documents", "metadatas", "distances"],
+    )
+    parents = []
+    seen = set()
+    candidate_max_dense_score = None
+    for child_rank, (child_text, metadata, distance) in enumerate(zip(
+        results["documents"][0],
+        results["metadatas"][0],
+        results["distances"][0],
+    ), start=1):
+        dense_score = round(1 / (1 + distance), 4)
+        if candidate_max_dense_score is None:
+            candidate_max_dense_score = dense_score
+        key = (metadata["source"], metadata["parent_chunk_idx"])
+        if key in seen:
+            continue
+        seen.add(key)
+        parents.append({
+            "source": metadata["source"],
+            "chunk_idx": metadata["parent_chunk_idx"],
+            "child_chunk_idx": metadata["child_chunk_idx"],
+            "child_rank": child_rank,
+            "matched_child_text": child_text,
+            "text": metadata["parent_text"],
+            "score": dense_score,
+            "dense_score": dense_score,
+            "candidate_max_dense_score": candidate_max_dense_score,
+        })
+        if len(parents) == top_k:
+            break
+    return parents
+
 
 def retrieve(
     query: str,
@@ -82,12 +131,14 @@ def retrieve(
         raise ValueError("top_k must be >= 1")
     if candidate_k < top_k:
         raise ValueError("candidate_k must be >= top_k")
-    if retrieval not in {"dense", "sparse", "hybrid"}:
-        raise ValueError("retrieval must be dense, sparse, or hybrid")
+    if retrieval not in {"dense", "sparse", "hybrid", "parent_child"}:
+        raise ValueError("retrieval must be dense, sparse, hybrid, or parent_child")
     if rerank and retrieval != "dense":
         raise ValueError("reranking currently requires dense retrieval")
     if retrieval == "sparse":
         return _sparse_retrieve(query, top_k)
+    if retrieval == "parent_child":
+        return _parent_child_retrieve(query, top_k, candidate_k)
     model = _get_model()
     q_emb = model.encode(
         [query], batch_size=1, max_length=MAX_LENGTH
