@@ -43,19 +43,33 @@ def _safe_extract(archive: Path, destination: Path) -> None:
         zipped.extractall(destination)
 
 
-def prepare_scifact(cache_dir: Path = Path(".cache/beir")) -> Path:
-    """Download, verify, and extract SciFact without committing third-party data."""
+def prepare_beir_dataset(
+    name: str,
+    url: str,
+    expected_md5: str,
+    cache_dir: Path = Path(".cache/beir"),
+) -> Path:
+    """Download, verify, and extract a BEIR archive outside version control."""
     cache_dir.mkdir(parents=True, exist_ok=True)
-    archive = cache_dir / "scifact.zip"
+    archive = cache_dir / f"{name}.zip"
     if not archive.exists():
-        urllib.request.urlretrieve(SCIFACT_URL, archive)
+        urllib.request.urlretrieve(url, archive)
     actual = _md5(archive)
-    if actual != SCIFACT_MD5:
-        raise ValueError(f"SciFact MD5 mismatch: expected {SCIFACT_MD5}, got {actual}")
-    dataset = cache_dir / "scifact"
+    if actual != expected_md5:
+        raise ValueError(
+            f"{name} MD5 mismatch: expected {expected_md5}, got {actual}"
+        )
+    dataset = cache_dir / name
     if not (dataset / "corpus.jsonl").exists():
         _safe_extract(archive, cache_dir)
     return dataset
+
+
+def prepare_scifact(cache_dir: Path = Path(".cache/beir")) -> Path:
+    """Download, verify, and extract SciFact without committing third-party data."""
+    return prepare_beir_dataset(
+        "scifact", SCIFACT_URL, SCIFACT_MD5, cache_dir
+    )
 
 
 def _jsonl(path: Path) -> list[dict]:
@@ -63,7 +77,7 @@ def _jsonl(path: Path) -> list[dict]:
         return [json.loads(line) for line in handle if line.strip()]
 
 
-def load_scifact(dataset: Path) -> tuple[dict, dict, dict]:
+def load_beir_dataset(dataset: Path) -> tuple[dict, dict, dict]:
     corpus = {
         str(row["_id"]): {
             "title": row.get("title", ""),
@@ -82,6 +96,10 @@ def load_scifact(dataset: Path) -> tuple[dict, dict, dict]:
             qrels.setdefault(query_id, {})[str(row["corpus-id"])] = int(row["score"])
     test_queries = {query_id: queries[query_id] for query_id in sorted(qrels)}
     return corpus, test_queries, qrels
+
+
+def load_scifact(dataset: Path) -> tuple[dict, dict, dict]:
+    return load_beir_dataset(dataset)
 
 
 def document_text(document: dict) -> str:
@@ -105,6 +123,7 @@ def build_scifact_index(
     *,
     chroma_path: str = "./chroma_db",
     batch_size: int = 64,
+    collection_name: str = SCIFACT_COLLECTION,
 ) -> tuple[object, float]:
     ordered = sorted(corpus)
     texts = [document_text(corpus[doc_id]) for doc_id in ordered]
@@ -114,11 +133,11 @@ def build_scifact_index(
     )["dense_vecs"].tolist()
     client = chromadb.PersistentClient(path=chroma_path)
     try:
-        client.delete_collection(SCIFACT_COLLECTION)
+        client.delete_collection(collection_name)
     except Exception:
         pass
     collection = client.create_collection(
-        SCIFACT_COLLECTION, metadata={"hnsw:space": "cosine"}
+        collection_name, metadata={"hnsw:space": "cosine"}
     )
     for start in range(0, len(ordered), 500):
         end = start + 500
@@ -132,9 +151,12 @@ def build_scifact_index(
     return collection, round(time.perf_counter() - started, 3)
 
 
-def get_scifact_index(chroma_path: str = "./chroma_db"):
+def get_scifact_index(
+    chroma_path: str = "./chroma_db",
+    collection_name: str = SCIFACT_COLLECTION,
+):
     return chromadb.PersistentClient(path=chroma_path).get_collection(
-        SCIFACT_COLLECTION
+        collection_name
     )
 
 
