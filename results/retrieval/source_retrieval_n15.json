@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-08T04:26:02.551565+00:00",
+  "environment": {
+    "python": "3.10.12",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "embedding_model": "BAAI/bge-m3",
+    "embedding_device": "cpu"
+  },
+  "protocol": {
+    "task": "source-level retrieval",
+    "cases": 15,
+    "top_k": 3,
+    "annotation": "one expected paper title per query"
+  },
+  "summary": {
+    "queries": 15,
+    "hits": 15,
+    "hit_rate_at_3": 1.0,
+    "mean_reciprocal_rank": 1.0,
+    "per_source": {
+      "Efficient Memory Management for Large Language Model Serving with PagedAttention": {
+        "queries": 5,
+        "hits": 5,
+        "hit_rate_at_3": 1.0,
+        "mean_reciprocal_rank": 1.0
+      },
+      "Fast Inference from Transformers via Speculative Decoding": {
+        "queries": 5,
+        "hits": 5,
+        "hit_rate_at_3": 1.0,
+        "mean_reciprocal_rank": 1.0
+      },
+      "SGLang Efficient Execution of Structured Language Model Programs": {
+        "queries": 5,
+        "hits": 5,
+        "hit_rate_at_3": 1.0,
+        "mean_reciprocal_rank": 1.0
+      }
+    }
+  },
+  "trials": [
+    {
+      "case_id": "spec-01",
+      "question": "How can speculative decoding preserve the target model's output distribution while reducing sequential decoding steps?",
+      "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+      "returned_sources": [
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding"
+      ],
+      "scores": [
+        0.6013,
+        0.5956,
+        0.5917
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "spec-02",
+      "question": "How does a small draft model propose multiple tokens for parallel verification by a larger target model?",
+      "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+      "returned_sources": [
+        "Fast Inference from Transformers via Speculative Decoding",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "Fast Inference from Transformers via Speculative Decoding"
+      ],
+      "scores": [
+        0.5464,
+        0.5391,
+        0.5349
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "spec-03",
+      "question": "Why is rejection sampling or a correction distribution needed when speculative draft tokens are rejected?",
+      "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+      "returned_sources": [
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding"
+      ],
+      "scores": [
+        0.5919,
+        0.5556,
+        0.5461
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "spec-04",
+      "question": "How do draft-token acceptance rate and draft-model cost determine speculative decoding speedup?",
+      "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+      "returned_sources": [
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding"
+      ],
+      "scores": [
+        0.5734,
+        0.5707,
+        0.5662
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "spec-05",
+      "question": "Why can parallel verification reduce memory-bandwidth-bound target-model invocations during autoregressive decoding?",
+      "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+      "returned_sources": [
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        0.5581,
+        0.546,
+        0.5365
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "paged-01",
+      "question": "How does PagedAttention map logical KV-cache blocks to non-contiguous physical GPU blocks?",
+      "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        0.6921,
+        0.6416,
+        0.6324
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "paged-02",
+      "question": "Why does contiguous KV-cache allocation waste GPU memory through fragmentation and over-reservation?",
+      "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        0.6069,
+        0.6066,
+        0.6025
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "paged-03",
+      "question": "How does copy-on-write allow KV-cache blocks to be shared during parallel sampling or beam search?",
+      "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        0.6038,
+        0.5919,
+        0.579
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "paged-04",
+      "question": "How does vLLM use PagedAttention to improve large language model serving throughput?",
+      "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        0.736,
+        0.6866,
+        0.685
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "paged-05",
+      "question": "What role does a block table play when an attention kernel reads paged KV-cache blocks?",
+      "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        0.622,
+        0.6032,
+        0.5969
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "sglang-01",
+      "question": "How does RadixAttention reuse KV cache across prompts with shared prefixes?",
+      "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        0.6563,
+        0.6049,
+        0.5997
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "sglang-02",
+      "question": "How does a radix tree organize reusable prompt prefixes and evict cached KV tensors?",
+      "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        0.6154,
+        0.559,
+        0.5536
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "sglang-03",
+      "question": "How do the SGLang frontend language and backend runtime jointly optimize structured LLM programs?",
+      "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        0.6538,
+        0.6087,
+        0.6081
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "sglang-04",
+      "question": "How do compressed finite-state machines accelerate constrained decoding in SGLang?",
+      "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        0.6425,
+        0.6273,
+        0.5881
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "sglang-05",
+      "question": "How does SGLang schedule structured generation programs containing control flow and parallel calls?",
+      "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        0.6187,
+        0.6187,
+        0.5863
+      ],
+      "first_relevant_rank": 1,
+      "hit": true
+    }
+  ]
+}

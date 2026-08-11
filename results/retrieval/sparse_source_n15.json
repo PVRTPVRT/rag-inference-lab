@@ -1,0 +1,851 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-10T14:02:42.051437+00:00",
+  "environment": {
+    "python": "3.10.12",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "embedding_model": null,
+    "embedding_device": null,
+    "reranker_model": null,
+    "reranker_device": null
+  },
+  "protocol": {
+    "task": "source-level retrieval",
+    "cases": 15,
+    "top_k": 3,
+    "retrieval": "sparse",
+    "rrf_k": null,
+    "bm25_k1": 1.5,
+    "bm25_b": 0.75,
+    "rerank": false,
+    "candidate_k": 3,
+    "annotation": "one expected paper title per query"
+  },
+  "summary": {
+    "queries": 15,
+    "hits": 15,
+    "hit_rate_at_3": 1.0,
+    "mean_reciprocal_rank": 0.9556,
+    "mean_retrieval_ms_including_model_warmup": 5.379,
+    "cold_first_retrieval_ms": 77.292,
+    "steady_retrieval_mean_ms": 0.243,
+    "steady_retrieval_p50_ms": 0.229,
+    "per_source": {
+      "Efficient Memory Management for Large Language Model Serving with PagedAttention": {
+        "queries": 5,
+        "hits": 5,
+        "hit_rate_at_3": 1.0,
+        "mean_reciprocal_rank": 1.0
+      },
+      "Fast Inference from Transformers via Speculative Decoding": {
+        "queries": 5,
+        "hits": 5,
+        "hit_rate_at_3": 1.0,
+        "mean_reciprocal_rank": 0.8667
+      },
+      "SGLang Efficient Execution of Structured Language Model Programs": {
+        "queries": 5,
+        "hits": 5,
+        "hit_rate_at_3": 1.0,
+        "mean_reciprocal_rank": 1.0
+      }
+    }
+  },
+  "trials": [
+    {
+      "case_id": "spec-01",
+      "question": "How can speculative decoding preserve the target model's output distribution while reducing sequential decoding steps?",
+      "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+      "returned_sources": [
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding"
+      ],
+      "scores": [
+        16.842644,
+        15.685078,
+        15.33185
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        16.842644,
+        15.685078,
+        15.33185
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        3,
+        1,
+        4
+      ],
+      "retrieval_ms": 77.292,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "spec-02",
+      "question": "How does a small draft model propose multiple tokens for parallel verification by a larger target model?",
+      "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Fast Inference from Transformers via Speculative Decoding"
+      ],
+      "scores": [
+        12.549162,
+        10.912542,
+        10.767686
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        12.549162,
+        10.912542,
+        10.767686
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        4,
+        37,
+        2
+      ],
+      "retrieval_ms": 0.266,
+      "first_relevant_rank": 3,
+      "hit": true
+    },
+    {
+      "case_id": "spec-03",
+      "question": "Why is rejection sampling or a correction distribution needed when speculative draft tokens are rejected?",
+      "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+      "returned_sources": [
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding"
+      ],
+      "scores": [
+        20.776304,
+        17.324022,
+        15.125687
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        20.776304,
+        17.324022,
+        15.125687
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        27,
+        2,
+        4
+      ],
+      "retrieval_ms": 0.25,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "spec-04",
+      "question": "How do draft-token acceptance rate and draft-model cost determine speculative decoding speedup?",
+      "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+      "returned_sources": [
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding"
+      ],
+      "scores": [
+        10.683886,
+        10.355883,
+        9.467993
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        10.683886,
+        10.355883,
+        9.467993
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        6,
+        12,
+        11
+      ],
+      "retrieval_ms": 0.309,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "spec-05",
+      "question": "Why can parallel verification reduce memory-bandwidth-bound target-model invocations during autoregressive decoding?",
+      "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+      "returned_sources": [
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        13.501982,
+        11.897646,
+        10.9339
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        13.501982,
+        11.897646,
+        10.9339
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        3,
+        19,
+        37
+      ],
+      "retrieval_ms": 0.198,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "paged-01",
+      "question": "How does PagedAttention map logical KV-cache blocks to non-contiguous physical GPU blocks?",
+      "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        28.085634,
+        23.888849,
+        22.896588
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        28.085634,
+        23.888849,
+        22.896588
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        14,
+        15,
+        17
+      ],
+      "retrieval_ms": 0.23,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "paged-02",
+      "question": "Why does contiguous KV-cache allocation waste GPU memory through fragmentation and over-reservation?",
+      "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        21.355095,
+        16.210443,
+        15.316947
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        21.355095,
+        16.210443,
+        15.316947
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        11,
+        3,
+        35
+      ],
+      "retrieval_ms": 0.2,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "paged-03",
+      "question": "How does copy-on-write allow KV-cache blocks to be shared during parallel sampling or beam search?",
+      "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        25.299278,
+        23.459408,
+        22.205754
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        25.299278,
+        23.459408,
+        22.205754
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        18,
+        19,
+        31
+      ],
+      "retrieval_ms": 0.322,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "paged-04",
+      "question": "How does vLLM use PagedAttention to improve large language model serving throughput?",
+      "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        16.291063,
+        16.269374,
+        12.399306
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        16.291063,
+        16.269374,
+        12.399306
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        37,
+        0,
+        5
+      ],
+      "retrieval_ms": 0.203,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "paged-05",
+      "question": "What role does a block table play when an attention kernel reads paged KV-cache blocks?",
+      "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        19.573381,
+        17.252537,
+        17.09886
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        19.573381,
+        17.252537,
+        17.09886
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        13,
+        15,
+        16
+      ],
+      "retrieval_ms": 0.342,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "sglang-01",
+      "question": "How does RadixAttention reuse KV cache across prompts with shared prefixes?",
+      "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        20.221649,
+        14.77303,
+        12.796591
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        20.221649,
+        14.77303,
+        12.796591
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        8,
+        21,
+        9
+      ],
+      "retrieval_ms": 0.19,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "sglang-02",
+      "question": "How does a radix tree organize reusable prompt prefixes and evict cached KV tensors?",
+      "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        19.661047,
+        14.742107,
+        13.883755
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        19.661047,
+        14.742107,
+        13.883755
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        9,
+        11,
+        10
+      ],
+      "retrieval_ms": 0.281,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "sglang-03",
+      "question": "How do the SGLang frontend language and backend runtime jointly optimize structured LLM programs?",
+      "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        22.529815,
+        19.622689,
+        15.645552
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        22.529815,
+        19.622689,
+        15.645552
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        1,
+        0,
+        8
+      ],
+      "retrieval_ms": 0.215,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "sglang-04",
+      "question": "How do compressed finite-state machines accelerate constrained decoding in SGLang?",
+      "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        20.435814,
+        18.784539,
+        16.893319
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        20.435814,
+        18.784539,
+        16.893319
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        39,
+        3,
+        14
+      ],
+      "retrieval_ms": 0.164,
+      "first_relevant_rank": 1,
+      "hit": true
+    },
+    {
+      "case_id": "sglang-05",
+      "question": "How does SGLang schedule structured generation programs containing control flow and parallel calls?",
+      "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        24.439183,
+        22.037616,
+        19.365207
+      ],
+      "dense_scores": [
+        null,
+        null,
+        null
+      ],
+      "sparse_scores": [
+        24.439183,
+        22.037616,
+        19.365207
+      ],
+      "rrf_scores": [
+        null,
+        null,
+        null
+      ],
+      "dense_ranks": [
+        null,
+        null,
+        null
+      ],
+      "sparse_ranks": [
+        null,
+        null,
+        null
+      ],
+      "rerank_scores": [
+        null,
+        null,
+        null
+      ],
+      "returned_chunk_indices": [
+        1,
+        0,
+        3
+      ],
+      "retrieval_ms": 0.227,
+      "first_relevant_rank": 1,
+      "hit": true
+    }
+  ]
+}

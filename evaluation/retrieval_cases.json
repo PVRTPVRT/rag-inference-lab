@@ -1,0 +1,77 @@
+[
+  {
+    "id": "spec-01",
+    "question": "How can speculative decoding preserve the target model's output distribution while reducing sequential decoding steps?",
+    "expected_source": "Fast Inference from Transformers via Speculative Decoding"
+  },
+  {
+    "id": "spec-02",
+    "question": "How does a small draft model propose multiple tokens for parallel verification by a larger target model?",
+    "expected_source": "Fast Inference from Transformers via Speculative Decoding"
+  },
+  {
+    "id": "spec-03",
+    "question": "Why is rejection sampling or a correction distribution needed when speculative draft tokens are rejected?",
+    "expected_source": "Fast Inference from Transformers via Speculative Decoding"
+  },
+  {
+    "id": "spec-04",
+    "question": "How do draft-token acceptance rate and draft-model cost determine speculative decoding speedup?",
+    "expected_source": "Fast Inference from Transformers via Speculative Decoding"
+  },
+  {
+    "id": "spec-05",
+    "question": "Why can parallel verification reduce memory-bandwidth-bound target-model invocations during autoregressive decoding?",
+    "expected_source": "Fast Inference from Transformers via Speculative Decoding"
+  },
+  {
+    "id": "paged-01",
+    "question": "How does PagedAttention map logical KV-cache blocks to non-contiguous physical GPU blocks?",
+    "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+  },
+  {
+    "id": "paged-02",
+    "question": "Why does contiguous KV-cache allocation waste GPU memory through fragmentation and over-reservation?",
+    "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+  },
+  {
+    "id": "paged-03",
+    "question": "How does copy-on-write allow KV-cache blocks to be shared during parallel sampling or beam search?",
+    "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+  },
+  {
+    "id": "paged-04",
+    "question": "How does vLLM use PagedAttention to improve large language model serving throughput?",
+    "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+  },
+  {
+    "id": "paged-05",
+    "question": "What role does a block table play when an attention kernel reads paged KV-cache blocks?",
+    "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+  },
+  {
+    "id": "sglang-01",
+    "question": "How does RadixAttention reuse KV cache across prompts with shared prefixes?",
+    "expected_source": "SGLang Efficient Execution of Structured Language Model Programs"
+  },
+  {
+    "id": "sglang-02",
+    "question": "How does a radix tree organize reusable prompt prefixes and evict cached KV tensors?",
+    "expected_source": "SGLang Efficient Execution of Structured Language Model Programs"
+  },
+  {
+    "id": "sglang-03",
+    "question": "How do the SGLang frontend language and backend runtime jointly optimize structured LLM programs?",
+    "expected_source": "SGLang Efficient Execution of Structured Language Model Programs"
+  },
+  {
+    "id": "sglang-04",
+    "question": "How do compressed finite-state machines accelerate constrained decoding in SGLang?",
+    "expected_source": "SGLang Efficient Execution of Structured Language Model Programs"
+  },
+  {
+    "id": "sglang-05",
+    "question": "How does SGLang schedule structured generation programs containing control flow and parallel calls?",
+    "expected_source": "SGLang Efficient Execution of Structured Language Model Programs"
+  }
+]

@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-08T04:27:38.488965+00:00",
+  "protocol": {
+    "task": "out-of-corpus abstention diagnostic",
+    "positive_queries": 15,
+    "negative_queries": 5,
+    "top_k": 3
+  },
+  "summary": {
+    "positive_top1_scores": {
+      "n": 15,
+      "min": 0.5464,
+      "mean": 0.6212,
+      "max": 0.736
+    },
+    "negative_top1_scores": {
+      "n": 5,
+      "min": 0.4875,
+      "mean": 0.5092,
+      "max": 0.561
+    },
+    "calibration_set_best_threshold": {
+      "threshold": 0.5672,
+      "positive_recall": 0.8667,
+      "negative_rejection_rate": 1.0,
+      "balanced_accuracy": 0.9333
+    },
+    "warning": "The threshold is fitted on a small diagnostic set and requires validation on a larger held-out set before production use."
+  },
+  "negative_trials": [
+    {
+      "case_id": "ood-mla",
+      "question": "How does Multi-Head Latent Attention compress the key-value cache?",
+      "top_score": 0.561,
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        0.561,
+        0.5519,
+        0.5516
+      ]
+    },
+    {
+      "case_id": "ood-lora",
+      "question": "How should the rank of a LoRA adapter be selected during fine-tuning?",
+      "top_score": 0.501,
+      "returned_sources": [
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention"
+      ],
+      "scores": [
+        0.501,
+        0.4926,
+        0.4857
+      ]
+    },
+    {
+      "case_id": "ood-rlhf",
+      "question": "How does PPO optimize a language model policy from human preference rewards?",
+      "top_score": 0.5026,
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "Fast Inference from Transformers via Speculative Decoding",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        0.5026,
+        0.4959,
+        0.4922
+      ]
+    },
+    {
+      "case_id": "ood-diffusion",
+      "question": "How does iterative denoising generate an image in a diffusion model?",
+      "top_score": 0.4938,
+      "returned_sources": [
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding",
+        "Fast Inference from Transformers via Speculative Decoding"
+      ],
+      "scores": [
+        0.4938,
+        0.4913,
+        0.4893
+      ]
+    },
+    {
+      "case_id": "ood-bert-pruning",
+      "question": "Which BERT attention heads can be pruned without reducing classification accuracy?",
+      "top_score": 0.4875,
+      "returned_sources": [
+        "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+        "SGLang Efficient Execution of Structured Language Model Programs",
+        "SGLang Efficient Execution of Structured Language Model Programs"
+      ],
+      "scores": [
+        0.4875,
+        0.4807,
+        0.4799
+      ]
+    }
+  ]
+}

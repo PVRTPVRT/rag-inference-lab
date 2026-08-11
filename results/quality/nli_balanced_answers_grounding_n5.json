@@ -1,0 +1,390 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-10T12:15:58.618194+00:00",
+  "environment": {
+    "python": "3.10.12",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "model": "cross-encoder/nli-deberta-v3-base",
+    "device": "cuda:0"
+  },
+  "protocol": {
+    "source_answers": "results/quality/ollama_q4_rerank_balanced_prompt_n8.json",
+    "entailment_threshold": 0.5,
+    "contradiction_threshold": 0.5,
+    "focus_sentences": 3
+  },
+  "summary": {
+    "answers": 5,
+    "claims": 16,
+    "cited_claims": 9,
+    "citation_coverage": 0.5625,
+    "supported_claims": 5,
+    "claim_entailment_rate": 0.3125,
+    "contradicted_claims": 0,
+    "claim_contradiction_rate": 0.0,
+    "invalid_citation_count": 0,
+    "nli_pairs": 11,
+    "nli_pair_mean_ms": 62.74,
+    "nli_pair_p50_ms": 16.328,
+    "warning": "NLI labels are automated diagnostics. The thresholds require calibration against independently annotated generated-answer claims."
+  },
+  "trials": [
+    {
+      "case_id": "answer-spec-correctness",
+      "answer": "Speculative decoding preserves the target model's output distribution by using an approximation model to generate multiple completions, then evaluating these with the target model. Only those completions that lead to an identical distribution from the target model are accepted [S1]. This ensures the final output distribution matches that of the target model alone.",
+      "verification": {
+        "claims": [
+          {
+            "claim": "Speculative decoding preserves the target model's output distribution by using an approximation model to generate multiple completions, then evaluating these with the target model.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "Only those completions that lead to an identical distribution from the target model are accepted.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "neutral",
+                "probabilities": {
+                  "contradiction": 0.002317,
+                  "entailment": 0.000949,
+                  "neutral": 0.996735
+                },
+                "latency_ms": 325.239
+              }
+            ]
+          },
+          {
+            "claim": "This ensures the final output distribution matches that of the target model alone.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          }
+        ],
+        "summary": {
+          "claim_count": 3,
+          "cited_claim_count": 1,
+          "citation_coverage": 0.3333,
+          "supported_claim_count": 0,
+          "entailment_rate": 0.0,
+          "contradicted_claim_count": 0,
+          "contradiction_rate": 0.0,
+          "invalid_citation_count": 0
+        }
+      }
+    },
+    {
+      "case_id": "answer-spec-speed",
+      "answer": "The speedup from speculative decoding is determined by several factors including the choice of approximation model \\(M_q\\), the value of \\(\\gamma\\) (the number of guesses), and the availability of additional computation resources. Specifically, choosing an approximation model around two orders of magnitude smaller than the target model \\(M_p\\) usually performs best [S1]. Additionally, varying \\(\\gamma\\) during inference could yield further improvements [S1], and speculative decoding provides significant benefits when there are additional computational resources available, such as in scenarios where memory bandwidth is the bottleneck [S2][S3].",
+      "verification": {
+        "claims": [
+          {
+            "claim": "The speedup from speculative decoding is determined by several factors including the choice of approximation model \\(M_q\\), the value of \\(\\gamma\\) (the number of guesses), and the availability of additional computation resources.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "Specifically, choosing an approximation model around two orders of magnitude smaller than the target model \\(M_p\\) usually performs best.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 7e-05,
+                  "entailment": 0.996831,
+                  "neutral": 0.003099
+                },
+                "latency_ms": 81.723
+              }
+            ]
+          },
+          {
+            "claim": "Additionally, varying \\(\\gamma\\) during inference could yield further improvements, and speculative decoding provides significant benefits when there are additional computational resources available, such as in scenarios where memory bandwidth is the bottleneck.",
+            "citation_ids": [
+              1,
+              2,
+              3
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "neutral",
+                "probabilities": {
+                  "contradiction": 0.001094,
+                  "entailment": 0.0001,
+                  "neutral": 0.998806
+                },
+                "latency_ms": 63.918
+              },
+              {
+                "source_id": "S2",
+                "predicted_label": "neutral",
+                "probabilities": {
+                  "contradiction": 0.000188,
+                  "entailment": 0.000379,
+                  "neutral": 0.999433
+                },
+                "latency_ms": 110.64
+              },
+              {
+                "source_id": "S3",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 8.8e-05,
+                  "entailment": 0.991508,
+                  "neutral": 0.008404
+                },
+                "latency_ms": 15.684
+              }
+            ]
+          }
+        ],
+        "summary": {
+          "claim_count": 3,
+          "cited_claim_count": 2,
+          "citation_coverage": 0.6667,
+          "supported_claim_count": 2,
+          "entailment_rate": 0.6667,
+          "contradicted_claim_count": 0,
+          "contradiction_rate": 0.0,
+          "invalid_citation_count": 0
+        }
+      }
+    },
+    {
+      "case_id": "answer-paged-mapping",
+      "answer": "PagedAttention maps logical KV blocks to GPU memory in a way that allows them to be stored in non-contiguous physical memory, enabling more flexible paged memory management [S1]. This mapping is similar to how virtual memory works in operating systems, where contiguous logical pages can correspond to non-contiguous physical memory pages [S2].",
+      "verification": {
+        "claims": [
+          {
+            "claim": "PagedAttention maps logical KV blocks to GPU memory in a way that allows them to be stored in non-contiguous physical memory, enabling more flexible paged memory management.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "neutral",
+                "probabilities": {
+                  "contradiction": 0.004281,
+                  "entailment": 0.063246,
+                  "neutral": 0.932473
+                },
+                "latency_ms": 22.304
+              }
+            ]
+          },
+          {
+            "claim": "This mapping is similar to how virtual memory works in operating systems, where contiguous logical pages can correspond to non-contiguous physical memory pages.",
+            "citation_ids": [
+              2
+            ],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S2",
+                "predicted_label": "neutral",
+                "probabilities": {
+                  "contradiction": 5.9e-05,
+                  "entailment": 0.00448,
+                  "neutral": 0.995461
+                },
+                "latency_ms": 16.328
+              }
+            ]
+          }
+        ],
+        "summary": {
+          "claim_count": 2,
+          "cited_claim_count": 2,
+          "citation_coverage": 1.0,
+          "supported_claim_count": 0,
+          "entailment_rate": 0.0,
+          "contradicted_claim_count": 0,
+          "contradiction_rate": 0.0,
+          "invalid_citation_count": 0
+        }
+      }
+    },
+    {
+      "case_id": "answer-paged-sharing",
+      "answer": "During parallel sampling, vLLM shares the KV cache for the prompt across multiple output samples. Specifically, since both outputs share the same prompt, vLLM only reserves space for one copy of the prompt\u2019s state at the prompt phase; logical blocks for the prompts of both sequences are mapped to the same physical blocks [S1]. For the generation phase, when different output tokens need separate storage for KV cache, vLLM implements a copy-on-write mechanism at the block granularity. This means that when a physical block needs modification by multiple sequences, it allocates a new physical block and copies information from the original block only when necessary [S1].",
+      "verification": {
+        "claims": [
+          {
+            "claim": "During parallel sampling, vLLM shares the KV cache for the prompt across multiple output samples.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "Specifically, since both outputs share the same prompt, vLLM only reserves space for one copy of the prompt\u2019s state at the prompt phase; logical blocks for the prompts of both sequences are mapped to the same physical blocks.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 8.6e-05,
+                  "entailment": 0.99827,
+                  "neutral": 0.001644
+                },
+                "latency_ms": 14.672
+              }
+            ]
+          },
+          {
+            "claim": "For the generation phase, when different output tokens need separate storage for KV cache, vLLM implements a copy-on-write mechanism at the block granularity.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "This means that when a physical block needs modification by multiple sequences, it allocates a new physical block and copies information from the original block only when necessary.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "neutral",
+                "probabilities": {
+                  "contradiction": 0.326774,
+                  "entailment": 0.000158,
+                  "neutral": 0.673068
+                },
+                "latency_ms": 13.376
+              }
+            ]
+          }
+        ],
+        "summary": {
+          "claim_count": 4,
+          "cited_claim_count": 2,
+          "citation_coverage": 0.5,
+          "supported_claim_count": 1,
+          "entailment_rate": 0.25,
+          "contradicted_claim_count": 0,
+          "contradiction_rate": 0.0,
+          "invalid_citation_count": 0
+        }
+      }
+    },
+    {
+      "case_id": "answer-sglang-radix",
+      "answer": "RadixAttention reuses and evicts KV cache through a radix tree structure that manages sequences of tokens and their corresponding KV cache tensors. It uses an LRU eviction policy to manage memory efficiently, where nodes representing the least recently used leaves are evicted first [S1]. This allows for the reuse of common ancestors until they too become leaves and are potentially evicted. The system also employs a cache-aware scheduling policy to enhance cache hit rates during runtime [S1].",
+      "verification": {
+        "claims": [
+          {
+            "claim": "RadixAttention reuses and evicts KV cache through a radix tree structure that manages sequences of tokens and their corresponding KV cache tensors.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "It uses an LRU eviction policy to manage memory efficiently, where nodes representing the least recently used leaves are evicted first.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 9.2e-05,
+                  "entailment": 0.995553,
+                  "neutral": 0.004354
+                },
+                "latency_ms": 13.056
+              }
+            ]
+          },
+          {
+            "claim": "This allows for the reuse of common ancestors until they too become leaves and are potentially evicted.",
+            "citation_ids": [],
+            "invalid_citation_ids": [],
+            "supported": false,
+            "contradicted": false,
+            "evidence": []
+          },
+          {
+            "claim": "The system also employs a cache-aware scheduling policy to enhance cache hit rates during runtime.",
+            "citation_ids": [
+              1
+            ],
+            "invalid_citation_ids": [],
+            "supported": true,
+            "contradicted": false,
+            "evidence": [
+              {
+                "source_id": "S1",
+                "predicted_label": "entailment",
+                "probabilities": {
+                  "contradiction": 8e-05,
+                  "entailment": 0.998269,
+                  "neutral": 0.00165
+                },
+                "latency_ms": 13.197
+              }
+            ]
+          }
+        ],
+        "summary": {
+          "claim_count": 4,
+          "cited_claim_count": 2,
+          "citation_coverage": 0.5,
+          "supported_claim_count": 2,
+          "entailment_rate": 0.5,
+          "contradicted_claim_count": 0,
+          "contradiction_rate": 0.0,
+          "invalid_citation_count": 0
+        }
+      }
+    }
+  ]
+}

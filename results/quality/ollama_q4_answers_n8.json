@@ -1,0 +1,388 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-10T05:02:18.628405+00:00",
+  "protocol": {
+    "model": "qwen2.5:7b-instruct-q4_K_M",
+    "top_k": 3,
+    "max_tokens": 192,
+    "temperature": 0.0,
+    "seed": 42,
+    "dense_abstention_threshold": 0.5672
+  },
+  "summary": {
+    "cases": 8,
+    "positive_cases": 5,
+    "negative_cases": 3,
+    "positive_answer_rate": 1.0,
+    "mean_positive_term_group_recall": 0.6167,
+    "generated_positive_citation_rate": 0.8,
+    "generated_positive_valid_citation_id_rate": 0.8,
+    "negative_abstention_rate": 1.0,
+    "warning": "Term-group recall and citation-ID validity are deterministic diagnostics, not semantic correctness or citation-entailment judgments. The threshold was fitted on a small non-held-out calibration set."
+  },
+  "trials": [
+    {
+      "case_id": "answer-spec-correctness",
+      "question": "How does speculative decoding preserve the target model's output distribution?",
+      "answerable": true,
+      "retrieval_confidence": 0.5775,
+      "gate_triggered": false,
+      "sources": [
+        {
+          "id": "S1",
+          "source": "Fast Inference from Transformers via Speculative Decoding",
+          "chunk_idx": 3,
+          "dense_score": 0.5775
+        },
+        {
+          "id": "S2",
+          "source": "Fast Inference from Transformers via Speculative Decoding",
+          "chunk_idx": 2,
+          "dense_score": 0.5622
+        },
+        {
+          "id": "S3",
+          "source": "Fast Inference from Transformers via Speculative Decoding",
+          "chunk_idx": 18,
+          "dense_score": 0.5571
+        }
+      ],
+      "answer": "Speculative decoding preserves the target model's output distribution by accepting all guesses generated from the more efficient approximation model that can lead to an identical distribution when evaluated by the target model. Specifically, after using a more efficient model \\(M_q\\) to generate \\(\\gamma\\) completions, the target model \\(M_p\\) evaluates these completions in parallel. Only those completions that result in distributions accepted by the target model are kept, ensuring that the final output distribution matches that of the target model alone [S1].",
+      "term_group_recall": 0.3333,
+      "citation_ids": [
+        1
+      ],
+      "has_citation": true,
+      "all_citation_ids_valid": true,
+      "correctly_abstained": false,
+      "false_abstention": false,
+      "generation_metrics": {
+        "engine": "ollama",
+        "model": "qwen2.5:7b-instruct-q4_K_M",
+        "ttft_ms": 3675.6,
+        "e2e_ms": 4384.7,
+        "output_tokens": 104,
+        "prompt_tokens": 1540,
+        "decode_tps": 147.4,
+        "token_count_source": "ollama_final_response.eval_count",
+        "server_eval_ms": 705.563,
+        "server_prompt_eval_ms": 191.838,
+        "server_load_ms": 3473.185,
+        "vram_used_mb": 8298.1,
+        "vram_delta_mb": 6754.1
+      }
+    },
+    {
+      "case_id": "answer-spec-speed",
+      "question": "Which factors determine the speedup from speculative decoding?",
+      "answerable": true,
+      "retrieval_confidence": 0.599,
+      "gate_triggered": false,
+      "sources": [
+        {
+          "id": "S1",
+          "source": "Fast Inference from Transformers via Speculative Decoding",
+          "chunk_idx": 19,
+          "dense_score": 0.599
+        },
+        {
+          "id": "S2",
+          "source": "Fast Inference from Transformers via Speculative Decoding",
+          "chunk_idx": 18,
+          "dense_score": 0.5893
+        },
+        {
+          "id": "S3",
+          "source": "Fast Inference from Transformers via Speculative Decoding",
+          "chunk_idx": 3,
+          "dense_score": 0.5761
+        }
+      ],
+      "answer": "The speedup from speculative decoding is determined by several factors. According to the retrieved context:\n\n1. Availability of Additional Computation Resources: The method provides significant benefits when there are additional computation resources available, particularly when memory bandwidth is the bottleneck [S1].\n\n2. Model Size and Task Complexity: The approach has been tested across various model sizes and tasks, including unconditional generation from a 97M parameter GPT-like model, English to German translation with an 11B parameters T5-XXL model, and dialog tasks with a 137B parameter LaMDA model [S3].\n\n3. Compatibility with Model Architectures: The method does not require changes to the model architectures or training regimes, ensuring that output distributions remain unchanged [S1].\n\n4. Choice of Approximation Model (Mq): The efficiency of speculative decoding depends on selecting an appropriate approximation model Mq that can generate \u03b3 completions efficiently [S3].\n\n5",
+      "term_group_recall": 0.3333,
+      "citation_ids": [
+        1,
+        3,
+        1,
+        3
+      ],
+      "has_citation": true,
+      "all_citation_ids_valid": true,
+      "correctly_abstained": false,
+      "false_abstention": false,
+      "generation_metrics": {
+        "engine": "ollama",
+        "model": "qwen2.5:7b-instruct-q4_K_M",
+        "ttft_ms": 293.8,
+        "e2e_ms": 1584.3,
+        "output_tokens": 192,
+        "prompt_tokens": 1521,
+        "decode_tps": 149.212,
+        "token_count_source": "ollama_final_response.eval_count",
+        "server_eval_ms": 1286.761,
+        "server_prompt_eval_ms": 119.332,
+        "server_load_ms": 113.104,
+        "vram_used_mb": 8298.1,
+        "vram_delta_mb": 0.0
+      }
+    },
+    {
+      "case_id": "answer-paged-mapping",
+      "question": "How does PagedAttention map logical KV blocks to GPU memory?",
+      "answerable": true,
+      "retrieval_confidence": 0.6756,
+      "gate_triggered": false,
+      "sources": [
+        {
+          "id": "S1",
+          "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+          "chunk_idx": 14,
+          "dense_score": 0.6756
+        },
+        {
+          "id": "S2",
+          "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+          "chunk_idx": 12,
+          "dense_score": 0.6605
+        },
+        {
+          "id": "S3",
+          "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+          "chunk_idx": 4,
+          "dense_score": 0.6494
+        }
+      ],
+      "answer": "PagedAttention organizes the KV cache as fixed-size KV blocks, similar to how pages are managed in virtual memory [S1]. A request\u2019s KV cache is represented as a series of logical KV blocks. The last KV block's unfilled positions are reserved for future generations. On GPU workers, a block engine allocates a contiguous chunk of GPU DRAM and divides it into physical KV blocks [S1]. The KV block manager maintains block tables\u2014the mapping between logical and physical KV blocks of each request. Each entry in the block table records the corresponding physical blocks of a logical block and the number of filled positions within those blocks [S3].",
+      "term_group_recall": 0.75,
+      "citation_ids": [
+        1,
+        1,
+        3
+      ],
+      "has_citation": true,
+      "all_citation_ids_valid": true,
+      "correctly_abstained": false,
+      "false_abstention": false,
+      "generation_metrics": {
+        "engine": "ollama",
+        "model": "qwen2.5:7b-instruct-q4_K_M",
+        "ttft_ms": 299.9,
+        "e2e_ms": 1174.7,
+        "output_tokens": 131,
+        "prompt_tokens": 1593,
+        "decode_tps": 150.361,
+        "token_count_source": "ollama_final_response.eval_count",
+        "server_eval_ms": 871.234,
+        "server_prompt_eval_ms": 123.633,
+        "server_load_ms": 114.829,
+        "vram_used_mb": 8298.1,
+        "vram_delta_mb": 0.0
+      }
+    },
+    {
+      "case_id": "answer-paged-sharing",
+      "question": "How does vLLM share KV cache during parallel sampling?",
+      "answerable": true,
+      "retrieval_confidence": 0.6484,
+      "gate_triggered": false,
+      "sources": [
+        {
+          "id": "S1",
+          "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+          "chunk_idx": 18,
+          "dense_score": 0.6484
+        },
+        {
+          "id": "S2",
+          "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+          "chunk_idx": 23,
+          "dense_score": 0.6195
+        },
+        {
+          "id": "S3",
+          "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+          "chunk_idx": 4,
+          "dense_score": 0.6129
+        }
+      ],
+      "answer": "During parallel sampling, vLLM shares the KV cache of the prompt among multiple samples that have the same input prompt. Specifically, vLLM uses a reference count mechanism to manage physical blocks shared across multiple sequences. For instance, in Fig. 8, both sequences share the same prompt's state during the prompt phase by mapping logical blocks 0 and 1 of both sequences to the same physical blocks (7 and 1 respectively). The reference counts for these physical blocks are increased when they are shared by multiple sequences. When a sequence needs to write to its last logical block, vLLM allocates a new physical block if necessary, copies the information from the original block, and decreases the reference count. This way, memory usage is reduced, especially for long input prompts [S1].",
+      "term_group_recall": 0.6667,
+      "citation_ids": [
+        1
+      ],
+      "has_citation": true,
+      "all_citation_ids_valid": true,
+      "correctly_abstained": false,
+      "false_abstention": false,
+      "generation_metrics": {
+        "engine": "ollama",
+        "model": "qwen2.5:7b-instruct-q4_K_M",
+        "ttft_ms": 294.5,
+        "e2e_ms": 1372.6,
+        "output_tokens": 161,
+        "prompt_tokens": 1523,
+        "decode_tps": 149.868,
+        "token_count_source": "ollama_final_response.eval_count",
+        "server_eval_ms": 1074.277,
+        "server_prompt_eval_ms": 120.095,
+        "server_load_ms": 113.162,
+        "vram_used_mb": 8298.1,
+        "vram_delta_mb": 0.0
+      }
+    },
+    {
+      "case_id": "answer-sglang-radix",
+      "question": "How does RadixAttention reuse and evict KV cache?",
+      "answerable": true,
+      "retrieval_confidence": 0.6822,
+      "gate_triggered": false,
+      "sources": [
+        {
+          "id": "S1",
+          "source": "SGLang Efficient Execution of Structured Language Model Programs",
+          "chunk_idx": 9,
+          "dense_score": 0.6822
+        },
+        {
+          "id": "S2",
+          "source": "SGLang Efficient Execution of Structured Language Model Programs",
+          "chunk_idx": 22,
+          "dense_score": 0.6005
+        },
+        {
+          "id": "S3",
+          "source": "SGLang Efficient Execution of Structured Language Model Programs",
+          "chunk_idx": 35,
+          "dense_score": 0.565
+        }
+      ],
+      "answer": "RadixAttention reuses and manages the KV (key-value) cache through a radix tree structure. Unlike traditional systems that discard the KV cache after each generation request, this system retains the cache for prompts and generation results within the radix tree. This allows for efficient prefix search, reuse, insertion, and eviction.\n\nFor eviction, an LRU (Least Recently Used) policy is implemented to manage memory efficiently. Specifically, leaves of the radix tree are evicted first because they have not been used recently. By doing so, common ancestors can be reused until they too become leaves and are subsequently evicted. This approach ensures that frequently accessed parts of the cache remain available while minimizing overall memory usage.\n\nThe system also includes a cache-aware scheduling policy to further enhance cache hit rates. This involves dynamically allocating memory for both caching and running requests from the same memory pool, allowing for more flexible management of resources during runtime operations.",
+      "term_group_recall": 1.0,
+      "citation_ids": [],
+      "has_citation": false,
+      "all_citation_ids_valid": false,
+      "correctly_abstained": false,
+      "false_abstention": false,
+      "generation_metrics": {
+        "engine": "ollama",
+        "model": "qwen2.5:7b-instruct-q4_K_M",
+        "ttft_ms": 282.5,
+        "e2e_ms": 1530.9,
+        "output_tokens": 183,
+        "prompt_tokens": 1438,
+        "decode_tps": 147.027,
+        "token_count_source": "ollama_final_response.eval_count",
+        "server_eval_ms": 1244.666,
+        "server_prompt_eval_ms": 112.556,
+        "server_load_ms": 110.168,
+        "vram_used_mb": 8298.1,
+        "vram_delta_mb": 0.0
+      }
+    },
+    {
+      "case_id": "answer-ood-lora",
+      "question": "What rank and scaling factor should be used when fine-tuning this model with LoRA?",
+      "answerable": false,
+      "retrieval_confidence": 0.5111,
+      "gate_triggered": true,
+      "sources": [
+        {
+          "id": "S1",
+          "source": "Fast Inference from Transformers via Speculative Decoding",
+          "chunk_idx": 11,
+          "dense_score": 0.5111
+        },
+        {
+          "id": "S2",
+          "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+          "chunk_idx": 29,
+          "dense_score": 0.5098
+        },
+        {
+          "id": "S3",
+          "source": "Fast Inference from Transformers via Speculative Decoding",
+          "chunk_idx": 15,
+          "dense_score": 0.5094
+        }
+      ],
+      "answer": "The retrieved context does not contain enough evidence.",
+      "term_group_recall": null,
+      "citation_ids": [],
+      "has_citation": false,
+      "all_citation_ids_valid": false,
+      "correctly_abstained": true,
+      "false_abstention": false,
+      "generation_metrics": null
+    },
+    {
+      "case_id": "answer-ood-diffusion",
+      "question": "Which noise schedule gives the best FID for latent diffusion image generation?",
+      "answerable": false,
+      "retrieval_confidence": 0.4931,
+      "gate_triggered": true,
+      "sources": [
+        {
+          "id": "S1",
+          "source": "SGLang Efficient Execution of Structured Language Model Programs",
+          "chunk_idx": 13,
+          "dense_score": 0.4931
+        },
+        {
+          "id": "S2",
+          "source": "SGLang Efficient Execution of Structured Language Model Programs",
+          "chunk_idx": 20,
+          "dense_score": 0.4931
+        },
+        {
+          "id": "S3",
+          "source": "SGLang Efficient Execution of Structured Language Model Programs",
+          "chunk_idx": 42,
+          "dense_score": 0.4868
+        }
+      ],
+      "answer": "The retrieved context does not contain enough evidence.",
+      "term_group_recall": null,
+      "citation_ids": [],
+      "has_citation": false,
+      "all_citation_ids_valid": false,
+      "correctly_abstained": true,
+      "false_abstention": false,
+      "generation_metrics": null
+    },
+    {
+      "case_id": "answer-ood-bert",
+      "question": "Which BERT attention heads can be physically pruned without reducing GLUE accuracy?",
+      "answerable": false,
+      "retrieval_confidence": 0.489,
+      "gate_triggered": true,
+      "sources": [
+        {
+          "id": "S1",
+          "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+          "chunk_idx": 33,
+          "dense_score": 0.489
+        },
+        {
+          "id": "S2",
+          "source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+          "chunk_idx": 37,
+          "dense_score": 0.4794
+        },
+        {
+          "id": "S3",
+          "source": "SGLang Efficient Execution of Structured Language Model Programs",
+          "chunk_idx": 9,
+          "dense_score": 0.4739
+        }
+      ],
+      "answer": "The retrieved context does not contain enough evidence.",
+      "term_group_recall": null,
+      "citation_ids": [],
+      "has_citation": false,
+      "all_citation_ids_valid": false,
+      "correctly_abstained": true,
+      "false_abstention": false,
+      "generation_metrics": null
+    }
+  ]
+}

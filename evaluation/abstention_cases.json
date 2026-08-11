@@ -1,0 +1,22 @@
+[
+  {
+    "id": "ood-mla",
+    "question": "How does Multi-Head Latent Attention compress the key-value cache?"
+  },
+  {
+    "id": "ood-lora",
+    "question": "How should the rank of a LoRA adapter be selected during fine-tuning?"
+  },
+  {
+    "id": "ood-rlhf",
+    "question": "How does PPO optimize a language model policy from human preference rewards?"
+  },
+  {
+    "id": "ood-diffusion",
+    "question": "How does iterative denoising generate an image in a diffusion model?"
+  },
+  {
+    "id": "ood-bert-pruning",
+    "question": "Which BERT attention heads can be pruned without reducing classification accuracy?"
+  }
+]

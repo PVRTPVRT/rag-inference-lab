@@ -1,0 +1,50 @@
+[
+  {
+    "id": "answer-spec-correctness",
+    "question": "How does speculative decoding preserve the target model's output distribution?",
+    "answerable": true,
+    "expected_term_groups": [["rejection", "reject"], ["correction distribution", "adjusted distribution", "residual distribution"], ["target model", "target distribution"]]
+  },
+  {
+    "id": "answer-spec-speed",
+    "question": "Which factors determine the speedup from speculative decoding?",
+    "answerable": true,
+    "expected_term_groups": [["acceptance rate", "accepted"], ["draft model", "approximation model"], ["target model", "verification"]]
+  },
+  {
+    "id": "answer-paged-mapping",
+    "question": "How does PagedAttention map logical KV blocks to GPU memory?",
+    "answerable": true,
+    "expected_term_groups": [["logical", "virtual"], ["physical"], ["block table", "mapping"], ["non-contiguous", "noncontiguous"]]
+  },
+  {
+    "id": "answer-paged-sharing",
+    "question": "How does vLLM share KV cache during parallel sampling?",
+    "answerable": true,
+    "expected_term_groups": [["copy-on-write", "copy on write"], ["shared", "sharing"], ["physical block", "kv block"]]
+  },
+  {
+    "id": "answer-sglang-radix",
+    "question": "How does RadixAttention reuse and evict KV cache?",
+    "answerable": true,
+    "expected_term_groups": [["radix tree"], ["prefix"], ["lru", "least recently used", "evict"]]
+  },
+  {
+    "id": "answer-ood-lora",
+    "question": "What rank and scaling factor should be used when fine-tuning this model with LoRA?",
+    "answerable": false,
+    "expected_term_groups": []
+  },
+  {
+    "id": "answer-ood-diffusion",
+    "question": "Which noise schedule gives the best FID for latent diffusion image generation?",
+    "answerable": false,
+    "expected_term_groups": []
+  },
+  {
+    "id": "answer-ood-bert",
+    "question": "Which BERT attention heads can be physically pruned without reducing GLUE accuracy?",
+    "answerable": false,
+    "expected_term_groups": []
+  }
+]

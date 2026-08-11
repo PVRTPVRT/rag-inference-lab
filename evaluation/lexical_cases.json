@@ -1,0 +1,74 @@
+[
+  {
+    "id": "sglang-jump-forward",
+    "question": "How does jump-forward decoding use a compressed FSM to skip deterministic token paths?",
+    "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "relevant_chunk_indices": [13, 14, 15, 22, 40, 41]
+  },
+  {
+    "id": "sglang-primitives",
+    "question": "What do the SGLang extend, gen, select, fork, and join primitives control?",
+    "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "relevant_chunk_indices": [3, 5, 6, 7]
+  },
+  {
+    "id": "sglang-regex",
+    "question": "How is the regex parameter used to constrain structured JSON generation in SGLang?",
+    "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "relevant_chunk_indices": [5, 6, 12, 13, 14]
+  },
+  {
+    "id": "sglang-cache-hit-rate",
+    "question": "How does SGLang define cache hit rate as cached prompt tokens divided by prompt tokens?",
+    "expected_source": "SGLang Efficient Execution of Structured Language Model Programs",
+    "relevant_chunk_indices": [9, 12]
+  },
+  {
+    "id": "paged-fcfs-preemption",
+    "question": "Under FCFS scheduling, which requests does vLLM preempt first to prevent starvation?",
+    "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "relevant_chunk_indices": [21, 22]
+  },
+  {
+    "id": "paged-swap-cpu",
+    "question": "When swapping an evicted KV block, where does vLLM copy it and which allocator manages it?",
+    "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "relevant_chunk_indices": [22, 23]
+  },
+  {
+    "id": "paged-reference-zero",
+    "question": "What happens when a shared physical KV block's reference count reaches zero?",
+    "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "relevant_chunk_indices": [18, 20]
+  },
+  {
+    "id": "paged-block-entry",
+    "question": "Which physical-block mapping and filled-position fields are recorded in a vLLM block-table entry?",
+    "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "relevant_chunk_indices": [14, 15, 16]
+  },
+  {
+    "id": "spec-dlk-divergence",
+    "question": "What is the relationship between DLK(p,q), disjoint support, and speculative acceptance probability?",
+    "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+    "relevant_chunk_indices": [6, 7]
+  },
+  {
+    "id": "spec-capped-geometric",
+    "question": "Why is the number of tokens from Algorithm 1 a capped geometric variable with cap gamma?",
+    "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+    "relevant_chunk_indices": [6, 7, 8]
+  },
+  {
+    "id": "spec-rejection-m",
+    "question": "Why is rejection sampling with M = max_x p(x)/q(x) less efficient than speculative sampling?",
+    "expected_source": "Fast Inference from Transformers via Speculative Decoding",
+    "relevant_chunk_indices": [27, 28]
+  },
+  {
+    "id": "paged-kv-table-designs",
+    "question": "Which two KV block-table designs have no performance difference in PagedAttention?",
+    "expected_source": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    "relevant_chunk_indices": [12, 13]
+  }
+]
