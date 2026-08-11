@@ -61,3 +61,18 @@ def aggregate_metrics(
         key: round(sum(row[key] for row in rows) / len(rows), 6)
         for key in rows[0]
     }
+
+
+def per_query_metrics(
+    rankings: dict[str, list[str]],
+    qrels: dict[str, dict[str, int]],
+    cutoffs: tuple[int, ...] = (10, 100),
+) -> dict[str, dict[str, float]]:
+    """Return metric rows keyed by query ID for paired analysis."""
+    rows = {}
+    for query_id, ranking in rankings.items():
+        row = {}
+        for cutoff in cutoffs:
+            row.update(query_metrics(ranking, qrels.get(query_id, {}), cutoff))
+        rows[query_id] = row
+    return rows

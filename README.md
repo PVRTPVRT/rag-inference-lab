@@ -28,6 +28,8 @@ separate from measured results, and no speedup is claimed without a saved run.
 - An external BEIR/SciFact evaluation covers 5,183 documents and all 300 test
   queries with official qrels; raw third-party text remains outside Git and the
   fixed equal-weight RRF result is reported without post-hoc tuning.
+- Paired query bootstrap intervals and Holm correction separate supported gains
+  over dense from inconclusive top-10 differences versus BM25.
 - Claim-to-citation NLI has a balanced 30-pair diagnostic, evidence focusing,
   confusion matrices, and generated-answer checks; it is not an online blocker.
 - Verified RTX 4090 trials and retrieval-quality diagnostics are summarized in
@@ -239,8 +241,9 @@ This repository does not currently claim that:
   weights;
 - parent-child retrieval improves every query, reduces latency, or has been tuned
   on an external held-out corpus;
-- one SciFact run establishes general-domain, production-scale, or statistically
-  significant RAG improvement;
+- one SciFact run establishes general-domain or production-scale improvement;
+  paired statistics support RRF over dense on this test set, but most top-10
+  differences versus BM25 are not significant after Holm correction;
 - the small one-annotator NLI diagnostic is production-calibrated groundedness;
 - citation IDs establish claim-level entailment or the fitted gate generalizes.
 

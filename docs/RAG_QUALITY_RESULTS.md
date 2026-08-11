@@ -136,6 +136,28 @@ Recall@100, while fusion retained their complementary candidates. This is the
 strongest positive retrieval result in the repository because it uses an
 external test set and 300 queries rather than corpus-derived diagnostics.
 
+Uncertainty was estimated by resampling the same 300 queries as paired units
+20,000 times with seed 42. The table reports percentile 95% intervals for the
+mean difference (`RRF - baseline`). Two-sided bootstrap tail probabilities use
+an add-one correction; Holm-adjusted values control the family of eight metrics
+within each baseline comparison.
+
+| Comparison | Metric | Mean difference | 95% CI | Raw p | Holm p | Holm 0.05 |
+|---|---|---:|---:|---:|---:|---|
+| RRF - Dense | NDCG@10 | +0.043707 | [0.017389, 0.069269] | 0.001600 | 0.011200 | yes |
+| RRF - Dense | MRR@10 | +0.044504 | [0.015975, 0.072334] | 0.002700 | 0.011200 | yes |
+| RRF - Dense | Recall@10 | +0.038778 | [0.001833, 0.077224] | 0.040298 | 0.040298 | yes |
+| RRF - Dense | Recall@100 | +0.040000 | [0.016667, 0.066667] | 0.002000 | 0.011200 | yes |
+| RRF - BM25 | NDCG@10 | +0.020714 | [-0.003573, 0.044944] | 0.091195 | 0.455975 | no |
+| RRF - BM25 | MRR@10 | +0.019958 | [-0.008311, 0.048015] | 0.162892 | 0.553172 | no |
+| RRF - BM25 | Recall@10 | +0.028944 | [-0.000722, 0.059612] | 0.057197 | 0.343182 | no |
+| RRF - BM25 | Recall@100 | +0.054444 | [0.026667, 0.083903] | 0.000100 | 0.000800 | yes |
+
+The conservative conclusion is narrower than the point estimates: RRF is
+supported over dense across the reported key metrics, while its top-10
+advantages over BM25 are not statistically established here. The robust BM25
+comparison is Recall@100, supporting the complementary-candidate explanation.
+
 Dense retrieval uses a deterministic exact cosine matrix over the stored BGE-M3
 vectors, with document ID as the tie-break. Two complete runs produced identical
 aggregate metrics and all recorded top-10 rankings. Approximate HNSW rankings are
@@ -143,15 +165,17 @@ not used for the published quality numbers.
 
 The benchmark is still one scientific fact-retrieval dataset, not proof of a
 general production RAG improvement. It measures document retrieval rather than
-answer generation or entailment, and no confidence intervals or significance
-test are reported yet. The result file excludes query text, abstracts, and qrels;
-it retains aggregate metrics and top document IDs/scores only.
+answer generation or entailment. Bootstrap inference is conditional on this test
+set and is not an independent cross-domain replication. The result file excludes
+query text, abstracts, and qrels; it retains aggregate metrics, statistical
+comparisons, and top document IDs/scores only.
 
 Reproduce:
 
 ```bash
 python evaluate_scifact.py --device cuda:0 --rebuild-index \
   --top-k 100 --record-k 10 --rrf-k 60 \
+  --bootstrap-samples 20000 --bootstrap-seed 42 \
   --output results/retrieval/scifact_bge_m3_test_n300.json
 ```
 
@@ -281,7 +305,8 @@ RAG_NLI_DEVICE=cuda:0 python evaluate_answer_grounding.py \
   external held-out validation.
 - SciFact covers scientific claim retrieval only; it does not validate generation,
   multilingual retrieval, enterprise documents, or production scale.
-- The external comparison does not yet include confidence intervals or significance testing.
+- Paired bootstrap uncertainty covers the fixed SciFact test queries only and
+  does not replace independent validation on another domain or dataset.
 - Term-group recall can miss valid paraphrases and does not measure entailment.
 - The 30-pair NLI set has one annotator and generated claims lack independent labels.
 - Evidence focusing is lexical and can miss mathematical or low-overlap support.

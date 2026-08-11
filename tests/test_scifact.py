@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from evaluation.beir_metrics import aggregate_metrics, query_metrics
+from evaluation.beir_metrics import aggregate_metrics, per_query_metrics, query_metrics
 from rag.scifact import (
     document_text,
     exact_cosine_top_k,
@@ -42,6 +42,15 @@ class BeirMetricTests(unittest.TestCase):
     def test_rejects_invalid_cutoff(self):
         with self.assertRaises(ValueError):
             query_metrics([], {}, cutoff=0)
+
+    def test_per_query_rows_preserve_query_ids(self):
+        rows = per_query_metrics(
+            {"q2": ["d2"], "q1": ["d1"]},
+            {"q1": {"d1": 1}, "q2": {"other": 1}},
+            cutoffs=(1,),
+        )
+        self.assertEqual(rows["q1"]["mrr_at_1"], 1.0)
+        self.assertEqual(rows["q2"]["mrr_at_1"], 0.0)
 
 
 class ExactCosineTests(unittest.TestCase):
