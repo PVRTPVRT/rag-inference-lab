@@ -50,6 +50,16 @@ class ReciprocalRankFusionTests(unittest.TestCase):
         self.assertIn("dense_score", fused[0])
         self.assertIn("sparse_score", fused[0])
 
+    def test_custom_document_key_controls_generic_tie_break(self):
+        dense = [{"doc_id": "b", "dense_score": 0.9}]
+        sparse = [{"doc_id": "a", "sparse_score": 2.0}]
+        fused = reciprocal_rank_fusion(
+            {"dense": dense, "sparse": sparse},
+            key=lambda row: (row["doc_id"],),
+        )
+        self.assertEqual([row["doc_id"] for row in fused], ["a", "b"])
+        self.assertEqual(fused[0]["rrf_score"], fused[1]["rrf_score"])
+
     def test_rejects_negative_rrf_constant(self):
         with self.assertRaises(ValueError):
             reciprocal_rank_fusion({}, rrf_k=-1)

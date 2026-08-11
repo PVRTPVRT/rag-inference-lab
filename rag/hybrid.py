@@ -99,11 +99,13 @@ def reciprocal_rank_fusion(
             item["rrf_score"] += 1 / (rrf_k + rank)
     for item in fused.values():
         item["rrf_score"] = round(item["rrf_score"], 8)
-    return sorted(
-        fused.values(),
-        key=lambda item: (
-            -item["rrf_score"],
-            str(item["source"]),
-            int(item["chunk_idx"]),
-        ),
-    )
+    return [
+        item
+        for identifier, item in sorted(
+            fused.items(),
+            key=lambda pair: (
+                -pair[1]["rrf_score"],
+                tuple(str(value) for value in pair[0]),
+            ),
+        )
+    ]

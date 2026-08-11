@@ -25,6 +25,9 @@ separate from measured results, and no speedup is claimed without a saved run.
 - A separate parent-child index retrieves 192-token children and returns their
   512-token parents; its measured results are published without making it the
   application default.
+- An external BEIR/SciFact evaluation covers 5,183 documents and all 300 test
+  queries with official qrels; raw third-party text remains outside Git and the
+  fixed equal-weight RRF result is reported without post-hoc tuning.
 - Claim-to-citation NLI has a balanced 30-pair diagnostic, evidence focusing,
   confusion matrices, and generated-answer checks; it is not an online blocker.
 - Verified RTX 4090 trials and retrieval-quality diagnostics are summarized in
@@ -47,6 +50,8 @@ explicit `N/A` over a misleading throughput value.
 - Optionally rerank dense candidates with BGE-reranker-v2-m3.
 - Require stable `[S1]` citations and gate low-confidence queries before generation.
 - Diagnose whether cited evidence entails each claim with a local three-way NLI
+- Evaluate Dense, BM25, and RRF on the external SciFact test split with NDCG,
+  MAP, Recall, and MRR at fixed cutoffs.
   model and a measured top-sentence evidence-focusing stage.
 - Serve a Streamlit UI across Ollama GGUF and vLLM FP16 backends.
 - Measure client TTFT, end-to-end latency, decode throughput, and device-wide
@@ -64,6 +69,7 @@ evaluate_evidence.py         Manually labeled evidence-chunk evaluation
 evaluate_answers.py          Answer facts, citations, and abstention diagnostic
 evaluate_entailment.py       Balanced three-way cited-chunk NLI evaluation
 evaluate_answer_grounding.py NLI diagnostic over saved generated answers
+evaluate_scifact.py          External BEIR/SciFact retrieval evaluation
 backends/metrics.py          Dependency-free metric aggregation
 backends/ollama_backend.py   Ollama streaming client and server metrics
 backends/preflight.py        Server/model/version and VRAM-isolation checks
@@ -78,6 +84,7 @@ rag/reranker.py              Optional BGE cross-encoder reranking
 rag/prompting.py             Citation contract and experimental gate
 rag/entailment.py            Claim extraction, evidence focusing, and local NLI
 docs/BENCHMARK_PROTOCOL.md   Claim and reproduction rules
+docs/DATASETS.md             External dataset provenance and licenses
 docs/RTX4090_RESULTS.md      Verified results and claim boundaries
 results/                     Published raw serving and retrieval trials
 tests/                       Unit tests for metrics, backends, and evaluation
@@ -111,6 +118,20 @@ length is a retrieval configuration, not a claim about GPU kernel alignment.
 The optional command creates a separate `papers_parent_child` collection with
 192-token children, 32-token child overlap, and the same 512-token parents used
 by the baseline labels; it does not overwrite the default `papers` collection.
+
+## External held-out retrieval benchmark
+
+```bash
+python evaluate_scifact.py --device cuda:0 --rebuild-index \
+  --top-k 100 --record-k 10 --rrf-k 60 \
+  --output results/retrieval/scifact_bge_m3_test_n300.json
+```
+
+The command downloads and verifies the official BEIR-preprocessed SciFact archive,
+builds a separate BGE-M3 index, and uses exact cosine search to evaluate Dense, BM25, and equal-weight
+RRF on all 300 test queries. `.cache/beir/` and the local Chroma collection are
+ignored by Git. See [`docs/DATASETS.md`](docs/DATASETS.md) for provenance and
+license boundaries.
 
 ## Run the UI
 
@@ -218,6 +239,8 @@ This repository does not currently claim that:
   weights;
 - parent-child retrieval improves every query, reduces latency, or has been tuned
   on an external held-out corpus;
+- one SciFact run establishes general-domain, production-scale, or statistically
+  significant RAG improvement;
 - the small one-annotator NLI diagnostic is production-calibrated groundedness;
 - citation IDs establish claim-level entailment or the fitted gate generalizes.
 

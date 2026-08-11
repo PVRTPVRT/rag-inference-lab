@@ -114,6 +114,50 @@ RAG_EMBED_DEVICE=cpu python evaluate_retrieval.py \
   --output results/retrieval/parent_child_source_n15.json
 ```
 
+## External held-out retrieval: BEIR/SciFact
+
+The retrieval methods were next evaluated without project-authored questions on
+the full BEIR SciFact test split: 5,183 scientific abstracts, 300 test queries,
+and official qrels. Documents were indexed once as title-plus-abstract units.
+BGE-M3 used a separate cosine Chroma collection; BM25 retained `k1=1.5` and
+`b=0.75`; equal-weight RRF retained `k=60`. All methods retrieved top-100, and
+no parameters were changed after seeing the results.
+
+| Retrieval | NDCG@10 | MAP@10 | MRR@10 | Recall@10 | Recall@100 |
+|---|---:|---:|---:|---:|---:|
+| Dense BGE-M3 | 0.641458 | 0.591970 | 0.607956 | 0.775111 | 0.903667 |
+| BM25 | 0.664451 | 0.620187 | 0.632503 | 0.784944 | 0.889222 |
+| Equal RRF | **0.685165** | **0.637336** | **0.652460** | **0.813889** | **0.943667** |
+
+Equal RRF improved every reported top-10 metric and Recall@100 over dense. The
+absolute gains over dense were +0.043707 NDCG@10, +0.044504 MRR@10, and
++0.040000 Recall@100. BM25 outperformed dense at top-10 ranking but had lower
+Recall@100, while fusion retained their complementary candidates. This is the
+strongest positive retrieval result in the repository because it uses an
+external test set and 300 queries rather than corpus-derived diagnostics.
+
+Dense retrieval uses a deterministic exact cosine matrix over the stored BGE-M3
+vectors, with document ID as the tie-break. Two complete runs produced identical
+aggregate metrics and all recorded top-10 rankings. Approximate HNSW rankings are
+not used for the published quality numbers.
+
+The benchmark is still one scientific fact-retrieval dataset, not proof of a
+general production RAG improvement. It measures document retrieval rather than
+answer generation or entailment, and no confidence intervals or significance
+test are reported yet. The result file excludes query text, abstracts, and qrels;
+it retains aggregate metrics and top document IDs/scores only.
+
+Reproduce:
+
+```bash
+python evaluate_scifact.py --device cuda:0 --rebuild-index \
+  --top-k 100 --record-k 10 --rrf-k 60 \
+  --output results/retrieval/scifact_bge_m3_test_n300.json
+```
+
+Dataset provenance and license notes are recorded in
+[`docs/DATASETS.md`](DATASETS.md).
+
 ## Answer and citation diagnostic
 
 Eight deterministic Qwen2.5-7B-Instruct Q4 cases were used: five answerable
@@ -235,6 +279,9 @@ RAG_NLI_DEVICE=cuda:0 python evaluate_answer_grounding.py \
   a production index should store parents separately and reference them by ID.
 - Parent-child sizes and candidate depth have one fixed configuration and no
   external held-out validation.
+- SciFact covers scientific claim retrieval only; it does not validate generation,
+  multilingual retrieval, enterprise documents, or production scale.
+- The external comparison does not yet include confidence intervals or significance testing.
 - Term-group recall can miss valid paraphrases and does not measure entailment.
 - The 30-pair NLI set has one annotator and generated claims lack independent labels.
 - Evidence focusing is lexical and can miss mathematical or low-overlap support.
