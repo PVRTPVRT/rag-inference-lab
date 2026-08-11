@@ -182,6 +182,37 @@ python evaluate_scifact.py --device cuda:0 --rebuild-index \
 Dataset provenance and license notes are recorded in
 [`docs/DATASETS.md`](DATASETS.md).
 
+## Cross-domain replication: BEIR/ArguAna
+
+ArguAna was selected and its protocol committed before results because it changes
+from scientific fact retrieval to best-counterargument retrieval. The official
+run covers 8,674 documents and 1,406 queries and removes query-ID self matches.
+
+| Retrieval | NDCG@10 | MRR@10 | Recall@10 | Recall@100 |
+|---|---:|---:|---:|---:|
+| Dense BGE-M3 | **0.543550** | **0.456290** | **0.821479** | 0.981508 |
+| BM25 | 0.419138 | 0.335422 | 0.687767 | 0.915363 |
+| Equal RRF | 0.508986 | 0.421387 | 0.788762 | **0.982930** |
+
+The SciFact effect did not replicate. RRF minus dense NDCG@10 was -0.034564
+with a 95% paired interval of [-0.047849, -0.021324] and Holm p=0.000800.
+Recall@100 differed by only +0.001422, interval [-0.004267, 0.007112], Holm
+p=0.722664. Equal RRF significantly improved every reported metric over BM25,
+but mixing that weaker lexical ranker into dense retrieval damaged top-rank
+quality.
+
+A fixed-protocol repeat produced identical aggregate metrics, statistical
+comparisons, and all recorded top-10 rankings. The published run fixes FP16
+index/query batch size at 32. BM25 full-test search took 143.055 seconds versus
+1.328 seconds for exact cosine search after embeddings, exposing the simple
+Python sparse scan as the scaling bottleneck rather than an online latency win.
+
+This negative cross-domain result remains part of the project. It narrows the
+claim to: equal RRF can help when sparse retrieval contributes complementary
+relevant candidates, but it must be validated per task and should not be enabled
+universally. Full selection reasoning, statistics, execution notes, and the
+reproduction command are in [`ARGUANA_RESULTS.md`](ARGUANA_RESULTS.md).
+
 ## Answer and citation diagnostic
 
 Eight deterministic Qwen2.5-7B-Instruct Q4 cases were used: five answerable
@@ -303,10 +334,12 @@ RAG_NLI_DEVICE=cuda:0 python evaluate_answer_grounding.py \
   a production index should store parents separately and reference them by ID.
 - Parent-child sizes and candidate depth have one fixed configuration and no
   external held-out validation.
-- SciFact covers scientific claim retrieval only; it does not validate generation,
-  multilingual retrieval, enterprise documents, or production scale.
-- Paired bootstrap uncertainty covers the fixed SciFact test queries only and
-  does not replace independent validation on another domain or dataset.
+- SciFact and ArguAna cover two English retrieval tasks; they do not validate
+  generation, multilingual retrieval, enterprise documents, or production scale.
+- Paired bootstrap uncertainty is conditional on each fixed test set; the two
+  datasets show opposite RRF effects rather than a universal fusion benefit.
+- ArguAna has no separate development split in this protocol, so fusion weights
+  were deliberately not fitted.
 - Term-group recall can miss valid paraphrases and does not measure entailment.
 - The 30-pair NLI set has one annotator and generated claims lack independent labels.
 - Evidence focusing is lexical and can miss mathematical or low-overlap support.

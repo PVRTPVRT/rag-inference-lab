@@ -30,6 +30,9 @@ separate from measured results, and no speedup is claimed without a saved run.
   fixed equal-weight RRF result is reported without post-hoc tuning.
 - Paired query bootstrap intervals and Holm correction separate supported gains
   over dense from inconclusive top-10 differences versus BM25.
+- A predeclared BEIR/ArguAna run covers 8,674 documents and 1,406 queries; it
+  reverses the SciFact result, with equal RRF significantly worse than dense at
+  NDCG@10 and no supported Recall@100 gain.
 - Claim-to-citation NLI has a balanced 30-pair diagnostic, evidence focusing,
   confusion matrices, and generated-answer checks; it is not an online blocker.
 - Verified RTX 4090 trials and retrieval-quality diagnostics are summarized in
@@ -52,9 +55,9 @@ explicit `N/A` over a misleading throughput value.
 - Optionally rerank dense candidates with BGE-reranker-v2-m3.
 - Require stable `[S1]` citations and gate low-confidence queries before generation.
 - Diagnose whether cited evidence entails each claim with a local three-way NLI
-- Evaluate Dense, BM25, and RRF on the external SciFact test split with NDCG,
-  MAP, Recall, and MRR at fixed cutoffs.
   model and a measured top-sentence evidence-focusing stage.
+- Evaluate Dense, BM25, and RRF on external SciFact and ArguAna test splits with
+  NDCG, MAP, Recall, MRR, paired intervals, and corrected comparisons.
 - Serve a Streamlit UI across Ollama GGUF and vLLM FP16 backends.
 - Measure client TTFT, end-to-end latency, decode throughput, and device-wide
   VRAM usage with clearly labeled measurement sources.
@@ -72,6 +75,7 @@ evaluate_answers.py          Answer facts, citations, and abstention diagnostic
 evaluate_entailment.py       Balanced three-way cited-chunk NLI evaluation
 evaluate_answer_grounding.py NLI diagnostic over saved generated answers
 evaluate_scifact.py          External BEIR/SciFact retrieval evaluation
+evaluate_arguana.py          External BEIR/ArguAna retrieval evaluation
 backends/metrics.py          Dependency-free metric aggregation
 backends/ollama_backend.py   Ollama streaming client and server metrics
 backends/preflight.py        Server/model/version and VRAM-isolation checks
@@ -87,6 +91,8 @@ rag/prompting.py             Citation contract and experimental gate
 rag/entailment.py            Claim extraction, evidence focusing, and local NLI
 docs/BENCHMARK_PROTOCOL.md   Claim and reproduction rules
 docs/DATASETS.md             External dataset provenance and licenses
+docs/DATASET_SELECTION.md    Pre-result external dataset decision record
+docs/ARGUANA_RESULTS.md      Cross-domain results and execution notes
 docs/RTX4090_RESULTS.md      Verified results and claim boundaries
 results/                     Published raw serving and retrieval trials
 tests/                       Unit tests for metrics, backends, and evaluation
@@ -134,6 +140,21 @@ builds a separate BGE-M3 index, and uses exact cosine search to evaluate Dense, 
 RRF on all 300 test queries. `.cache/beir/` and the local Chroma collection are
 ignored by Git. See [`docs/DATASETS.md`](docs/DATASETS.md) for provenance and
 license boundaries.
+
+The second external run was selected and committed before results. Reproduce it
+with:
+
+```bash
+python evaluate_arguana.py --device cuda:0 --rebuild-index \
+  --index-batch-size 32 --top-k 100 --record-k 10 --rrf-k 60 \
+  --bootstrap-samples 20000 --bootstrap-seed 42 \
+  --output results/retrieval/arguana_bge_m3_test_n1406.json
+```
+
+ArguAna requires query-ID self-match removal. It produced a stable negative
+cross-domain result for equal RRF versus dense. See
+[`docs/DATASET_SELECTION.md`](docs/DATASET_SELECTION.md) for why it was chosen
+and [`docs/ARGUANA_RESULTS.md`](docs/ARGUANA_RESULTS.md) for complete results.
 
 ## Run the UI
 

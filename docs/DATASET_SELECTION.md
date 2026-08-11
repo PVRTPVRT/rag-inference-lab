@@ -56,6 +56,16 @@ A cross-domain improvement claim will only be made for a metric when its paired
 estimate improvements that fail this rule will be reported as inconclusive.
 Negative results will remain in the repository.
 
+## Execution amendment
+
+After the pre-result commit, the first batch-64 process lost its controlling WSL
+connection while continuing in the background. No kernel OOM was recorded. Before
+designating a published result, index batch size was made an explicit CLI and
+protocol field and fixed at 32; query batch size was also recorded as 32. The
+retrieval methods, primary metrics, cutoffs, BM25 parameters, RRF constant,
+bootstrap settings, and decision thresholds above were unchanged. The final
+batch-32 run was repeated independently under the same fixed protocol.
+
 ## Data and license boundary
 
 The downloaded archive, corpus, queries, qrels, embeddings, and Chroma files stay

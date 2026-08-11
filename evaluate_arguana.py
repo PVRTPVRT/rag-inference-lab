@@ -48,6 +48,7 @@ def main() -> None:
     parser.add_argument("--rrf-k", type=int, default=60)
     parser.add_argument("--bootstrap-samples", type=int, default=20_000)
     parser.add_argument("--bootstrap-seed", type=int, default=42)
+    parser.add_argument("--index-batch-size", type=int, default=32)
     parser.add_argument("--rebuild-index", action="store_true")
     parser.add_argument(
         "--output",
@@ -68,14 +69,18 @@ def main() -> None:
     model = embedding_model(args.device)
     index_seconds = None
     if args.rebuild_index:
-        collection, index_seconds = build_arguana_index(corpus, model)
+        collection, index_seconds = build_arguana_index(
+            corpus, model, batch_size=args.index_batch_size
+        )
     else:
         try:
             collection = get_arguana_index()
             if collection.count() != len(corpus):
                 raise ValueError("collection size does not match corpus")
         except Exception:
-            collection, index_seconds = build_arguana_index(corpus, model)
+            collection, index_seconds = build_arguana_index(
+                corpus, model, batch_size=args.index_batch_size
+            )
     print(f"Dense index documents: {collection.count()}")
 
     dense, dense_timing = arguana_dense_rankings(
@@ -161,6 +166,8 @@ def main() -> None:
             "bm25_b": BM25_B,
             "query_order": "sorted qrel query IDs",
             "exclude_query_id_from_corpus_results": True,
+            "index_batch_size": args.index_batch_size,
+            "query_batch_size": 32,
             "post_hoc_tuning": False,
             "dataset_selected_before_results": True,
             "selection_record": "docs/DATASET_SELECTION.md",
